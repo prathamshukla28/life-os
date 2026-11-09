@@ -1,0 +1,381 @@
+{
+  "pack_id": "in_income_tax_fy2026_27",
+  "title": "India income tax (individual, salary) FY2026-27 - new and old regime",
+  "jurisdiction": "IN",
+  "tax_year": "FY2026-27",
+  "status": "UNVERIFIED: no value has been checked by a human; tier=secondary values come from secondary summaries",
+  "values": [
+    {
+      "id": "new_regime_slabs",
+      "value": [
+        [
+          0,
+          0
+        ],
+        [
+          400000,
+          0.05
+        ],
+        [
+          800000,
+          0.1
+        ],
+        [
+          1200000,
+          0.15
+        ],
+        [
+          1600000,
+          0.2
+        ],
+        [
+          2000000,
+          0.25
+        ],
+        [
+          2400000,
+          0.3
+        ]
+      ],
+      "unit": "list of [lower bound INR, marginal rate]; each rate applies to income above its lower bound up to the next lower bound",
+      "act_section_1961": "115BAC(1A)",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Value transcribed from secondary summaries of the Finance Act, 2026; not yet checked by a human against the gazette (SPEC-GAP LM-G3)."
+    },
+    {
+      "id": "new_regime_standard_deduction",
+      "value": 75000,
+      "unit": "INR (salary; capped at salary)",
+      "act_section_1961": "16(ia)",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Value transcribed from secondary summaries of the Finance Act, 2026; not yet checked by a human against the gazette (SPEC-GAP LM-G3)."
+    },
+    {
+      "id": "new_regime_rebate_87a",
+      "value": {
+        "max_rebate": 60000,
+        "income_limit": 1200000,
+        "marginal_relief": true
+      },
+      "unit": "INR; marginal_relief caps tax at the income in excess of income_limit",
+      "act_section_1961": "87A",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://www.incometaxindia.gov.in/w/what-is-rebate-under-section-87a-for-f.y-2025-26-and-who-can-claim-it-",
+      "source_doc_id": "incometaxindia: rebate u/s 87A page (titled F.Y. 2025-26)",
+      "source_tier": "primary",
+      "note": "Primary page is titled for F.Y. 2025-26; carried to FY2026-27 pending human check (SPEC-GAP LM-G8)."
+    },
+    {
+      "id": "new_regime_surcharge_bands",
+      "value": [
+        [
+          5000000,
+          0.1
+        ],
+        [
+          10000000,
+          0.15
+        ],
+        [
+          20000000,
+          0.25
+        ]
+      ],
+      "unit": "list of [total income above INR, surcharge rate]; new regime capped at 25%",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "primary",
+      "note": "Source is the Finance Act, 2026 gazette; value not yet checked by a human against it."
+    },
+    {
+      "id": "old_regime_slabs",
+      "value": [
+        [
+          0,
+          0
+        ],
+        [
+          250000,
+          0.05
+        ],
+        [
+          500000,
+          0.2
+        ],
+        [
+          1000000,
+          0.3
+        ]
+      ],
+      "unit": "list of [lower bound INR, marginal rate] for individuals below 60",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Value transcribed from secondary summaries of the Finance Act, 2026; not yet checked by a human against the gazette (SPEC-GAP LM-G3)."
+    },
+    {
+      "id": "old_regime_standard_deduction",
+      "value": 50000,
+      "unit": "INR (salary; capped at salary)",
+      "act_section_1961": "16(ia)",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Value transcribed from secondary summaries of the Finance Act, 2026; not yet checked by a human against the gazette (SPEC-GAP LM-G3)."
+    },
+    {
+      "id": "old_regime_rebate_87a",
+      "value": {
+        "max_rebate": 12500,
+        "income_limit": 500000,
+        "marginal_relief": false
+      },
+      "unit": "INR; no marginal relief",
+      "act_section_1961": "87A",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://www.incometaxindia.gov.in/w/what-is-rebate-under-section-87a-for-f.y-2025-26-and-who-can-claim-it-",
+      "source_doc_id": "incometaxindia: rebate u/s 87A page (titled F.Y. 2025-26)",
+      "source_tier": "primary",
+      "note": "Primary page is titled for F.Y. 2025-26; carried to FY2026-27 pending human check (SPEC-GAP LM-G8)."
+    },
+    {
+      "id": "old_regime_exemption_senior_60_79",
+      "value": {
+        "age_min": 60,
+        "age_max": 79,
+        "exemption_limit": 300000
+      },
+      "unit": "INR basic exemption limit by age (resident)",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Value transcribed from secondary summaries of the Finance Act, 2026; not yet checked by a human against the gazette (SPEC-GAP LM-G3)."
+    },
+    {
+      "id": "old_regime_exemption_super_senior_80_plus",
+      "value": {
+        "age_min": 80,
+        "age_max": null,
+        "exemption_limit": 500000
+      },
+      "unit": "INR basic exemption limit by age (resident)",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Value transcribed from secondary summaries of the Finance Act, 2026; not yet checked by a human against the gazette (SPEC-GAP LM-G3)."
+    },
+    {
+      "id": "old_regime_surcharge_bands",
+      "value": [
+        [
+          5000000,
+          0.1
+        ],
+        [
+          10000000,
+          0.15
+        ],
+        [
+          20000000,
+          0.25
+        ],
+        [
+          50000000,
+          0.37
+        ]
+      ],
+      "unit": "list of [total income above INR, surcharge rate]",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "primary",
+      "note": "Source is the Finance Act, 2026 gazette; value not yet checked by a human against it."
+    },
+    {
+      "id": "surcharge_marginal_relief",
+      "value": true,
+      "unit": "boolean; tax+surcharge above a band threshold may not exceed tax+surcharge at the threshold plus the income above it",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "primary",
+      "note": "Source is the Finance Act, 2026 gazette; value not yet checked by a human against it."
+    },
+    {
+      "id": "health_education_cess",
+      "value": 0.04,
+      "unit": "rate on income-tax including surcharge",
+      "act_section_1961": null,
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "primary",
+      "note": "Source is the Finance Act, 2026 gazette; value not yet checked by a human against it."
+    },
+    {
+      "id": "rounding_total_income",
+      "value": 10,
+      "unit": "INR multiple; paise ignored, last figure 5 or more rounds up",
+      "act_section_1961": "288A",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Rounding convention carried from s.288A of the 1961 Act; Income-tax Act, 2025 equivalent not yet confirmed."
+    },
+    {
+      "id": "rounding_tax",
+      "value": 10,
+      "unit": "INR multiple; paise ignored, last figure 5 or more rounds up",
+      "act_section_1961": "288B",
+      "effective_from": "2026-04-01",
+      "effective_to": "2027-03-31",
+      "tax_year": "FY2026-27",
+      "act": "Income-tax Act, 2025 read with the Finance Act, 2026 (section references to the Income-tax Act, 1961 are given for orientation; Income-tax Act, 2025 section numbers not yet confirmed)",
+      "act_section_2025": null,
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual (Union Budget / Finance Act)",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "Union Budget for FY2027-28 (conventionally presented 1 February 2027); any change expected effective 2027-04-01",
+      "source_url": "https://egazette.gov.in/WriteReadData/2026/271439.pdf",
+      "source_doc_id": "egazette-2026-271439 (Finance Act, 2026)",
+      "source_tier": "secondary",
+      "note": "Rounding convention carried from s.288B of the 1961 Act; Income-tax Act, 2025 equivalent not yet confirmed."
+    }
+  ]
+}

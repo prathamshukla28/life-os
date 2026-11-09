@@ -1,0 +1,12 @@
+{
+  "date_column": "Txn Date",
+  "date_format": "%d/%m/%Y",
+  "description_column": "Narration",
+  "debit_column": "Withdrawal Amt",
+  "credit_column": "Deposit Amt",
+  "category_rules": [
+    {"contains": "swiggy", "category": "food"},
+    {"contains": "bigbasket", "category": "groceries"},
+    {"contains": "rent", "category": "rent"}
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "pack_id": "in_low_risk_rates_2026q3",
+  "title": "India low-risk reference rates (small savings) Q3 FY2026-27",
+  "jurisdiction": "IN",
+  "status": "UNVERIFIED: secondary-tier values, not checked by a human",
+  "purpose": "opportunity-cost reference rate for the LM05 decision engine",
+  "values": [
+    {
+      "id": "ppf",
+      "value": 7.1,
+      "instrument": "Public Provident Fund (15-year lock-in; compounded annually)",
+      "unit": "percent per annum",
+      "effective_from": "2026-10-01",
+      "effective_to": "2026-12-31",
+      "period": "Q3 FY2026-27 (1 October - 31 December 2026)",
+      "source_url": "https://dea.gov.in/budget-division/475",
+      "source_doc_id": "DEA Budget Division - small savings schemes interest rates page (budget-division/475)",
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "quarterly (small savings rate notification)",
+      "refresh_cadence_days": 92,
+      "next_expected_change": "Rates for Q4 FY2026-27 (January-March 2027), normally notified by end of December 2026; effective 2027-01-01",
+      "note": "Administered small-savings rate; low-risk, not without risk (rates change quarterly, lock-ins apply). Not yet checked by a human against the notification."
+    },
+    {
+      "id": "post_office_time_deposit_1y",
+      "value": 6.9,
+      "instrument": "Post Office Time Deposit, 1 year (compounded quarterly)",
+      "unit": "percent per annum",
+      "effective_from": "2026-10-01",
+      "effective_to": "2026-12-31",
+      "period": "Q3 FY2026-27 (1 October - 31 December 2026)",
+      "source_url": "https://dea.gov.in/budget-division/475",
+      "source_doc_id": "DEA Budget Division - small savings schemes interest rates page (budget-division/475)",
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "quarterly (small savings rate notification)",
+      "refresh_cadence_days": 92,
+      "next_expected_change": "Rates for Q4 FY2026-27 (January-March 2027), normally notified by end of December 2026; effective 2027-01-01",
+      "note": "Administered small-savings rate; low-risk, not without risk (rates change quarterly, lock-ins apply). Not yet checked by a human against the notification."
+    },
+    {
+      "id": "post_office_savings_deposit",
+      "value": 4.0,
+      "instrument": "Post Office Savings Account",
+      "unit": "percent per annum",
+      "effective_from": "2026-10-01",
+      "effective_to": "2026-12-31",
+      "period": "Q3 FY2026-27 (1 October - 31 December 2026)",
+      "source_url": "https://dea.gov.in/budget-division/475",
+      "source_doc_id": "DEA Budget Division - small savings schemes interest rates page (budget-division/475)",
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "quarterly (small savings rate notification)",
+      "refresh_cadence_days": 92,
+      "next_expected_change": "Rates for Q4 FY2026-27 (January-March 2027), normally notified by end of December 2026; effective 2027-01-01",
+      "note": "Administered small-savings rate; low-risk, not without risk (rates change quarterly, lock-ins apply). Not yet checked by a human against the notification."
+    }
+  ]
+}

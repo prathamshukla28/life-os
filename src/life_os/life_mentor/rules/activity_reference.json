@@ -1,0 +1,109 @@
+{
+  "pack_id": "activity_reference",
+  "title": "WHO 2020 physical activity recommendations for adults (cited)",
+  "status": "UNVERIFIED: transcribed from the WHO PDF fetched 2026-10-11; not checked by a human",
+  "values": [
+    {
+      "id": "who_adult_aerobic_moderate_minutes_per_week",
+      "value": {
+        "min": 150,
+        "max": 300
+      },
+      "unit": "minutes of moderate-intensity aerobic activity per week",
+      "effective_from": "2020-11-25",
+      "effective_to": null,
+      "source_url": "https://www.who.int/publications/i/item/9789240015128",
+      "document_url": "https://iris.who.int/server/api/core/bitstreams/faa83413-d89e-4be9-bb01-b24671aef7ca/content",
+      "source_sha256": "50b66c44e7083cc3752849f301ae1d60d9360d511e34c0c948b39bdf6e13dc88",
+      "source_doc_id": "WHO guidelines on physical activity and sedentary behaviour (2020), ISBN 978-92-4-001512-8; recommendations for adults (aged 18-64 years)",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next WHO guideline update (date not announced)",
+      "note": "Text extracted from the WHO PDF fetched 2026-10-11 (sha256 recorded); publication date 25 November 2020 from the WHO publication page. Not checked by a human.",
+      "quote": "Adults should do at least 150-300 minutes of moderate-intensity aerobic physical activity; or at least 75-150 minutes of vigorous-intensity aerobic physical activity; or an equivalent combination ... throughout the week"
+    },
+    {
+      "id": "who_adult_aerobic_vigorous_minutes_per_week",
+      "value": {
+        "min": 75,
+        "max": 150
+      },
+      "unit": "minutes of vigorous-intensity aerobic activity per week",
+      "effective_from": "2020-11-25",
+      "effective_to": null,
+      "source_url": "https://www.who.int/publications/i/item/9789240015128",
+      "document_url": "https://iris.who.int/server/api/core/bitstreams/faa83413-d89e-4be9-bb01-b24671aef7ca/content",
+      "source_sha256": "50b66c44e7083cc3752849f301ae1d60d9360d511e34c0c948b39bdf6e13dc88",
+      "source_doc_id": "WHO guidelines on physical activity and sedentary behaviour (2020), ISBN 978-92-4-001512-8; recommendations for adults (aged 18-64 years)",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next WHO guideline update (date not announced)",
+      "note": "Text extracted from the WHO PDF fetched 2026-10-11 (sha256 recorded); publication date 25 November 2020 from the WHO publication page. Not checked by a human."
+    },
+    {
+      "id": "who_adult_muscle_strengthening_days_per_week",
+      "value": 2,
+      "unit": "minimum days per week (moderate or greater intensity, all major muscle groups)",
+      "effective_from": "2020-11-25",
+      "effective_to": null,
+      "source_url": "https://www.who.int/publications/i/item/9789240015128",
+      "document_url": "https://iris.who.int/server/api/core/bitstreams/faa83413-d89e-4be9-bb01-b24671aef7ca/content",
+      "source_sha256": "50b66c44e7083cc3752849f301ae1d60d9360d511e34c0c948b39bdf6e13dc88",
+      "source_doc_id": "WHO guidelines on physical activity and sedentary behaviour (2020), ISBN 978-92-4-001512-8; recommendations for adults (aged 18-64 years)",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next WHO guideline update (date not announced)",
+      "note": "Text extracted from the WHO PDF fetched 2026-10-11 (sha256 recorded); publication date 25 November 2020 from the WHO publication page. Not checked by a human.",
+      "quote": "Adults should also do muscle-strengthening activities at moderate or greater intensity that involve all major muscle groups on 2 or more days a week"
+    },
+    {
+      "id": "who_adult_age_band",
+      "value": {
+        "min": 18,
+        "max": 64
+      },
+      "unit": "years (adults; older adults 65+ have separate recommendations not bundled)",
+      "effective_from": "2020-11-25",
+      "effective_to": null,
+      "source_url": "https://www.who.int/publications/i/item/9789240015128",
+      "document_url": "https://iris.who.int/server/api/core/bitstreams/faa83413-d89e-4be9-bb01-b24671aef7ca/content",
+      "source_sha256": "50b66c44e7083cc3752849f301ae1d60d9360d511e34c0c948b39bdf6e13dc88",
+      "source_doc_id": "WHO guidelines on physical activity and sedentary behaviour (2020), ISBN 978-92-4-001512-8; recommendations for adults (aged 18-64 years)",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next WHO guideline update (date not announced)",
+      "note": "Text extracted from the WHO PDF fetched 2026-10-11 (sha256 recorded); publication date 25 November 2020 from the WHO publication page. Not checked by a human."
+    },
+    {
+      "id": "who_any_activity_better_than_none",
+      "value": true,
+      "unit": "statement",
+      "effective_from": "2024-06-26",
+      "effective_to": null,
+      "source_url": "https://www.who.int/news-room/fact-sheets/detail/physical-activity",
+      "document_url": "https://www.who.int/news-room/fact-sheets/detail/physical-activity",
+      "source_sha256": "e2f3e5b7edaea79dcce40c06b55608304e855f493721f140c2c2c72be5065a21",
+      "source_doc_id": "WHO fact sheet: Physical activity (page dated 26 June 2024)",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next WHO guideline update (date not announced)",
+      "note": "Fact sheet fetched 2026-10-11 (sha256 of the HTML recorded). Not checked by a human.",
+      "quote": "The guidelines highlight that any amount of physical activity is better than none"
+    }
+  ]
+}

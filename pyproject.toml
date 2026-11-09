@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "life-os"
+version = "0.1.0"
+description = "Local-first, stdlib-only personal mentor (finance, health, career, lifestyle) and ISO-week planner."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "prathamshukla28" }]
+keywords = ["local-first", "personal-finance", "weekly-review", "planner", "ics", "privacy"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Typing :: Typed",
+]
+# Runtime is standard library only. This list must stay empty;
+# tests/test_boundary.py enforces it at the import level.
+dependencies = []
+
+[project.optional-dependencies]
+# Developer / CI tooling only, pinned so lint, type and test runs are
+# reproducible. Never imported by the package.
+dev = [
+    "ruff==0.17.4",
+    "mypy==2.4.1",
+    "pytest==9.2.0",
+    "pytest-cov==7.1.0",
+    "hypothesis==6.170.15",
+]
+
+[project.scripts]
+life-mentor = "life_os.life_mentor.cli:main"
+weekly-tracker = "life_os.weekly_tracker.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["life_os*"]
+
+# Ship Life Mentor's charter, dated RulePack JSON files and the USDA subset.
+[tool.setuptools.package-data]
+"life_os" = ["py.typed"]
+"life_os.life_mentor" = ["README.md", "docs/*.md", "rules/*.json", "rules/*.md", "health/data/*.json"]
+"life_os.weekly_tracker" = ["README.md"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 110
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "SIM",      # simplify
+    "RUF100",   # stale noqa
+]
+ignore = [
+    "E501",     # formatter owns line length; long literal strings are allowed
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011", "B017"]
+
+[tool.mypy]
+python_version = "3.10"
+files = ["src/life_os"]
+strict = true
+warn_unreachable = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["life_os"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

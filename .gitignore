@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# Tooling
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Personal data: never commit a Life Mentor / Weekly Tracker home
+.life_mentor/
+.weekly_tracker/
+*.ics
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

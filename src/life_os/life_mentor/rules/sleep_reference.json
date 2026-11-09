@@ -1,0 +1,48 @@
+{
+  "pack_id": "sleep_reference",
+  "title": "AASM/SRS 2015 adult sleep duration consensus (cited)",
+  "status": "UNVERIFIED: transcribed from the consensus PDF fetched 2026-10-11; not checked by a human",
+  "values": [
+    {
+      "id": "adult_sleep_minimum_hours",
+      "value": 7,
+      "unit": "hours per night on a regular basis",
+      "effective_from": "2015-01-01",
+      "effective_to": null,
+      "source_url": "https://aasm.org/resources/pdf/pressroom/adult-sleep-duration-consensus.pdf",
+      "also_see": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4434546/",
+      "source_sha256": "e410c5c52658db1be994ba0f18d0841076a7b942448e6ec06e8e51a13d6d16ae",
+      "source_doc_id": "Watson NF et al. Recommended amount of sleep for a healthy adult: a joint consensus statement of the AASM and SRS. J Clin Sleep Med 2015;11(6):591-592",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next AASM/SRS consensus update (date not announced)",
+      "note": "Text extracted from the 2-page JCSM PDF fetched 2026-10-11 (sha256 recorded). effective_from = publication year only. Not checked by a human.",
+      "quote": "Adults should sleep 7 or more hours per night on a regular basis to promote optimal health."
+    },
+    {
+      "id": "adult_sleep_age_band",
+      "value": {
+        "min": 18,
+        "max": 60
+      },
+      "unit": "years",
+      "effective_from": "2015-01-01",
+      "effective_to": null,
+      "source_url": "https://aasm.org/resources/pdf/pressroom/adult-sleep-duration-consensus.pdf",
+      "also_see": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4434546/",
+      "source_sha256": "e410c5c52658db1be994ba0f18d0841076a7b942448e6ec06e8e51a13d6d16ae",
+      "source_doc_id": "Watson NF et al. Recommended amount of sleep for a healthy adult: a joint consensus statement of the AASM and SRS. J Clin Sleep Med 2015;11(6):591-592",
+      "source_tier": "primary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "annual review",
+      "refresh_cadence_days": 365,
+      "next_expected_change": "next AASM/SRS consensus update (date not announced)",
+      "note": "Text extracted from the 2-page JCSM PDF fetched 2026-10-11 (sha256 recorded). effective_from = publication year only. Not checked by a human.",
+      "quote": "... 7 or more hours of sleep per night on a regular basis to promote optimal health among adults aged 18 to 60 years."
+    }
+  ]
+}

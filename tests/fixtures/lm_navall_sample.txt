@@ -1,0 +1,11 @@
+Scheme Code;ISIN Div Payout/ ISIN Growth;ISIN Div Reinvestment;Scheme Name;Plan;Option;Net Asset Value;Date
+ 
+Open Ended Schemes(Equity Scheme - Synthetic Fund)
+ 
+Example Synthetic Mutual Fund
+ 
+900001;INF000000001;-;SYNTHETIC EQUITY FUND;Direct Plan;Growth;123.4567;09-Oct-2026
+900002;INF000000002;INF000000003;SYNTHETIC EQUITY FUND;Direct Plan;IDCW;18.48;09-Oct-2026
+900003;INF000000004;-;SYNTHETIC OLD FUND;Regular Plan;Growth;36.6451;02-Jul-2018
+900004;INF000000005;-;SYNTHETIC SUSPENDED FUND;Regular Plan;Growth;N.A.;09-Oct-2026
+ 

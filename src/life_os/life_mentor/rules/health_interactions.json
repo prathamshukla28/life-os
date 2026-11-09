@@ -1,0 +1,144 @@
+{
+  "pack_id": "health_interactions",
+  "title": "Cited food-medicine / condition flags (NIH MedlinePlus, NIDDK)",
+  "status": "UNVERIFIED: consumer summaries fetched 2026-10-11; not checked by a human",
+  "values": [
+    {
+      "id": "warfarin_vitamin_k",
+      "value": {
+        "medication_terms": [
+          "warfarin",
+          "coumadin",
+          "jantoven"
+        ],
+        "condition_terms": [],
+        "food_keys": [],
+        "nutrient_ids": [
+          "1185"
+        ],
+        "message": "MedlinePlus (warfarin): some foods and beverages that contain vitamin K can affect how warfarin works; it advises eating consistent amounts of vitamin K-containing food week to week."
+      },
+      "source_url": "https://medlineplus.gov/druginfo/meds/a682277.html",
+      "source_doc_id": "MedlinePlus Drug Information: Warfarin - special dietary instructions",
+      "unit": "flag",
+      "effective_from": "2026-10-11",
+      "effective_to": null,
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "semi-annual review",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "page revisions are not scheduled; re-check at each refresh"
+    },
+    {
+      "id": "maoi_tyramine",
+      "value": {
+        "medication_terms": [
+          "phenelzine",
+          "nardil",
+          "maoi",
+          "monoamine oxidase inhibitor"
+        ],
+        "condition_terms": [],
+        "food_keys": [],
+        "nutrient_ids": [],
+        "message": "MedlinePlus (phenelzine): eating foods high in tyramine during treatment can cause a serious reaction; tyramine is found in meat, poultry, fish or cheese that has been smoked, aged, improperly stored or spoiled, and some other foods."
+      },
+      "source_url": "https://medlineplus.gov/druginfo/meds/a682089.html",
+      "source_doc_id": "MedlinePlus Drug Information: Phenelzine - special dietary instructions",
+      "unit": "flag",
+      "effective_from": "2026-10-11",
+      "effective_to": null,
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "semi-annual review",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "page revisions are not scheduled; re-check at each refresh"
+    },
+    {
+      "id": "grapefruit_statins",
+      "value": {
+        "medication_terms": [
+          "simvastatin",
+          "atorvastatin"
+        ],
+        "condition_terms": [],
+        "food_keys": [
+          "grapefruit_raw"
+        ],
+        "nutrient_ids": [],
+        "message": "MedlinePlus (simvastatin, atorvastatin): talk to your doctor about eating grapefruit or drinking grapefruit juice while taking this medicine."
+      },
+      "source_url": "https://medlineplus.gov/druginfo/meds/a692030.html",
+      "source_doc_id": "MedlinePlus Drug Information: Simvastatin (also Atorvastatin, a600045) - special dietary instructions",
+      "unit": "flag",
+      "effective_from": "2026-10-11",
+      "effective_to": null,
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "semi-annual review",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "page revisions are not scheduled; re-check at each refresh",
+      "also_see": [
+        "https://medlineplus.gov/druginfo/meds/a600045.html"
+      ]
+    },
+    {
+      "id": "ace_inhibitor_potassium",
+      "value": {
+        "medication_terms": [
+          "lisinopril",
+          "ace inhibitor"
+        ],
+        "condition_terms": [],
+        "food_keys": [],
+        "nutrient_ids": [
+          "1092"
+        ],
+        "message": "MedlinePlus (lisinopril): talk to your doctor before using salt substitutes containing potassium; potassium supplements may interact with lisinopril."
+      },
+      "source_url": "https://medlineplus.gov/druginfo/meds/a692051.html",
+      "source_doc_id": "MedlinePlus Drug Information: Lisinopril - interactions and special dietary instructions",
+      "unit": "flag",
+      "effective_from": "2026-10-11",
+      "effective_to": null,
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "semi-annual review",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "page revisions are not scheduled; re-check at each refresh",
+      "note": "Only the lisinopril page was fetched; other ACE inhibitors are matched by the class term and flagged for pharmacist confirmation (LM-G27)."
+    },
+    {
+      "id": "kidney_disease_potassium",
+      "value": {
+        "medication_terms": [],
+        "condition_terms": [
+          "kidney disease",
+          "ckd",
+          "renal failure",
+          "renal disease"
+        ],
+        "food_keys": [],
+        "nutrient_ids": [
+          "1092"
+        ],
+        "message": "NIDDK: for people with chronic kidney disease, choosing foods and avoiding those high in sodium, potassium and phosphorus may prevent or delay some health problems; a dietitian can help plan meals."
+      },
+      "source_url": "https://www.niddk.nih.gov/health-information/kidney-disease/chronic-kidney-disease-ckd/eating-nutrition",
+      "source_doc_id": "NIDDK (NIH): Healthy Eating for Adults with Chronic Kidney Disease",
+      "unit": "flag",
+      "effective_from": "2026-10-11",
+      "effective_to": null,
+      "source_tier": "secondary",
+      "retrieved_on": "2026-10-11",
+      "verified_by_human": false,
+      "refresh_cadence": "semi-annual review",
+      "refresh_cadence_days": 180,
+      "next_expected_change": "page revisions are not scheduled; re-check at each refresh"
+    }
+  ]
+}
