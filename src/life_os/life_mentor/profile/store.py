@@ -12,7 +12,10 @@ Rules:
   - storing, correcting, or reading a fact for use requires current consent
     for its category (``ConsentRequired``);
   - ``set_fact`` never silently overwrites: an existing key must go through
-    ``correct`` so the change is journaled (ASUR-VERSION-01);
+    ``correct`` so the change is journaled (ASUR-VERSION-01); it raises
+    ``FactExists`` (a ``ValueError``);
+  - money facts (``MONEY_FACTS``) must be a non-negative number within
+    ``MAX_AMOUNT`` when written, by ``set_fact`` and ``correct`` alike;
   - ``export`` and ``delete`` work without consent - the data is the user's.
 """
 
@@ -27,11 +30,12 @@ from life_os.core.gate import BLOCK, HOLD, SHIP, Check, GateResult, run_gate
 
 from ..security import Journal, PrivateStore
 from .consent import ConsentLedger
-from .facts import ASSUMPTION, CATEGORIES, UNKNOWN, Fact
+from .facts import ASSUMPTION, CATEGORIES, UNKNOWN, Fact, check_money_fact
 
 __all__ = [
     "FACTS_FILE",
     "PROFILE_JOURNAL",
+    "FactExists",
     "Profile",
     "ProfileGateOutcome",
     "Requirement",
@@ -40,6 +44,14 @@ __all__ = [
 
 FACTS_FILE = "profile/facts.json"
 PROFILE_JOURNAL = "profile/journal.jsonl"
+
+
+class FactExists(ValueError):
+    """``set_fact`` on a key that already exists (change it with ``correct``)."""
+
+    def __init__(self, key: str) -> None:
+        super().__init__(f"fact {key!r} already exists; use Profile.correct() so the change is journaled")
+        self.key = key
 
 
 @dataclass(frozen=True)
@@ -79,11 +91,12 @@ class Profile:
 
     def set_fact(self, key: str, value: Any, category: str, provenance: str, basis: str) -> Fact:
         """Store a NEW fact. Requires consent; refuses to overwrite (use ``correct``)."""
+        check_money_fact(key, value)
         fact = Fact(key, value, category, provenance, basis, self._clock())
         self.consent.require(category)
         facts = self._load()
         if key in facts:
-            raise ValueError(f"fact {key!r} already exists; use correct() so the change is journaled")
+            raise FactExists(key)
         facts[key] = fact
         # Journal FIRST: append() verifies the chain and raises JournalTampered, so a
         # tampered journal now blocks the write (it used to land unjournaled), and a
@@ -107,6 +120,7 @@ class Profile:
             raise KeyError(key)
         old = facts[key]
         self.consent.require(old.category)
+        check_money_fact(key, value)
         new = Fact(key, value, old.category, provenance, basis, self._clock())
         facts[key] = new
         self.journal.append(

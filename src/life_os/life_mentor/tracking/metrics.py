@@ -115,7 +115,7 @@ class MetricLog:
         amount = self._validate(metric, value, provenance)
         if day in self._points(metric):
             raise ValueError(
-                f"{metric} already has a value for {day}; use correct() so the change is kept in history"
+                f"{metric} already has a value for {day}; use MetricLog.correct() so the change is kept in history"
             )
         self.journal.append(
             {

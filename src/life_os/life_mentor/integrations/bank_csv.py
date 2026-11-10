@@ -36,7 +36,7 @@ from life_os.core.gate import BLOCK, HOLD, SHIP, Check
 
 from ..finance.report import finalize, fixed_check
 from ..profile import ConsentLedger
-from ..profile.facts import encode_value
+from ..profile.facts import MAX_AMOUNT, encode_value
 from ..security import PrivateStore
 
 __all__ = [
@@ -83,6 +83,8 @@ def _amount(text: str) -> Decimal | None:
         raise ValueError("amount is not a number") from exc
     if not value.is_finite():
         raise ValueError("amount is not a number")
+    if abs(value) > MAX_AMOUNT:
+        raise ValueError("amount is out of range (limit 10^15)")
     return value
 
 
@@ -233,9 +235,8 @@ def _preview(path: Path, mapping: dict[str, Any]) -> tuple[dict[str, Any] | None
                 fixed_check(
                     HOLD,
                     "rejected_rows",
-                    f"{len(parsed['rejected'])} row(s) "
-                    f"could not be read; fix them or import with "
-                    f"allow_partial",
+                    f"{len(parsed['rejected'])} row(s) could not be read; "
+                    "fix them, or import with --allow-partial to skip them",
                 )
             )
         if parsed["unmapped_rows"]:
@@ -243,9 +244,8 @@ def _preview(path: Path, mapping: dict[str, Any]) -> tuple[dict[str, Any] | None
                 fixed_check(
                     HOLD,
                     "unmapped",
-                    f"{parsed['unmapped_rows']} debit(s) "
-                    f"match no category rule; add rules or accept them as "
-                    f"'{UNMAPPED}'",
+                    f"{parsed['unmapped_rows']} debit(s) match no category rule; "
+                    f"add rules, or import with --allow-partial to keep them as '{UNMAPPED}'",
                 )
             )
         if not parsed["rows_used"]:
@@ -294,7 +294,7 @@ def apply_bank_csv(
         elif worst == BLOCK or (worst == HOLD and not allow_partial):
             checks.append(
                 fixed_check(
-                    HOLD, "not_written", "nothing written; resolve the items above or pass allow_partial"
+                    HOLD, "not_written", "nothing written; resolve the items above or pass --allow-partial"
                 )
             )
         elif parsed["rows_used"]:

@@ -23,8 +23,21 @@ life-mentor profile export --out me.json       # 0600, refuses to overwrite with
 life-mentor journal verify
 life-mentor import bank-csv statement.csv --mapping mapping.json          # dry run
 life-mentor import bank-csv statement.csv --mapping mapping.json --apply  # needs finance consent
+life-mentor import bank-csv statement.csv --mapping mapping.json --apply --allow-partial  # skip bad rows
 life-mentor import amfi-nav NAVAll.txt --holdings holdings.json           # a file YOU downloaded
+life-mentor consent grant lifestyle --purpose habits
+life-mentor habits add walk --name "20-minute walk"   # at most 3 active; ids are never reused
+life-mentor habits checkin walk --day 2026-11-10      # once per day; --missed records "not done"
+life-mentor habits list
+life-mentor habits retire walk                        # stops it; the history is kept
+life-mentor habits ics --out habits.ics               # active habits as daily all-day events
 ```
+
+Money facts (`gross_salary_annual`, `payroll_deductions_annual`, `other_deductions_annual`,
+`take_home_monthly`, `essential_spend_monthly`, `emergency_fund_balance`,
+`discretionary_spend_monthly`, `debt_budget_monthly`, `commute_monthly`,
+`other_monthly_costs`) must be a plain non-negative number when written; every amount is
+limited to 10^15.
 
 `options.json` for `decide`:
 

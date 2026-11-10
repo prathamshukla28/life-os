@@ -39,7 +39,7 @@ from .integrations import (
     preview_bank_csv,
     value_holdings,
 )
-from .profile import CATEGORIES, ConsentRequired, Profile
+from .profile import CATEGORIES, ConsentRequired, FactExists, Profile
 from .profile.facts import decode_value, encode_value
 from .reports import (
     DISCLAIMERS,
@@ -152,7 +152,20 @@ def _parser() -> argparse.ArgumentParser:
     jr = sub.add_parser("journal").add_subparsers(dest="action", required=True)
     jr.add_parser("verify")
 
-    hab = sub.add_parser("habits", help="active-habit tools").add_subparsers(dest="action", required=True)
+    hab = sub.add_parser(
+        "habits", help="daily habits (at most 3 active; needs lifestyle consent)"
+    ).add_subparsers(dest="action", required=True)
+    ha = hab.add_parser("add", help="start tracking a habit")
+    ha.add_argument("habit_id", help="1-40 characters of a-z, 0-9 or _ (never reused)")
+    ha.add_argument("--name", required=True, help="what you will do, e.g. '20-minute walk'")
+    ha.add_argument("--start", type=_date, help="first day (default: --as-of, else today)")
+    hab.add_parser("list", help="list habits with their status and check-in counts")
+    hr = hab.add_parser("retire", help="stop tracking a habit (its history is kept)")
+    hr.add_argument("habit_id")
+    hc = hab.add_parser("checkin", help="record one day as done (or --missed)")
+    hc.add_argument("habit_id")
+    hc.add_argument("--day", type=_date, help="the day (default: --as-of, else today)")
+    hc.add_argument("--missed", action="store_true", help="record the day as not done")
     hics = hab.add_parser("ics", help="export active habits to a .ics calendar (local)")
     hics.add_argument("--out", help="output .ics file (default: stdout)")
     hics.add_argument("--force", action="store_true", help="overwrite an existing file")
@@ -263,9 +276,19 @@ def _cmd_fact(args: argparse.Namespace, prof: Profile) -> int:
         prov = PROVENANCE[args.provenance]
         value = _parse_value(args.value, args.json, prov)
         if args.action == "set":
-            prof.set_fact(args.key, value, args.category, prov, args.basis)
+            try:
+                prof.set_fact(args.key, value, args.category, prov, args.basis)
+            except FactExists as exc:
+                raise CliError(
+                    f"fact {args.key!r} already exists; change it with: life-mentor fact correct {args.key} VALUE"
+                ) from exc
         else:
-            prof.correct(args.key, value, prov, args.basis)
+            try:
+                prof.correct(args.key, value, prov, args.basis)
+            except KeyError as exc:
+                raise CliError(
+                    f"no fact {args.key!r} yet; add it with: life-mentor fact set {args.key} VALUE --category ..."
+                ) from exc
         print(f"{args.key}: recorded ({prov})")
         return 0
     if args.action == "delete":
@@ -450,16 +473,45 @@ def _cmd_import(args: argparse.Namespace, store: PrivateStore, as_of: date, gene
     return _emit(markdown, disp)
 
 
-def _cmd_habits(args: argparse.Namespace, store: PrivateStore) -> int:
-    """Export the active habit schedule to a local .ics file (LM-G54).
+def _gate_outcome(report: dict[str, Any]) -> int:
+    """Print a small report's gate reasons (one per line) and map it to an exit code."""
+    gate = report["gate"]
+    for r in gate["reasons"]:
+        prefix = "" if r["disposition"] == SHIP else f"{r['disposition']}: "
+        print(f"{prefix}{r['reason']}")
+    return EXIT_CODES[gate["disposition"]]
 
-    Reading habits requires ``lifestyle`` consent (enforced by the tracker). No
-    network, no account: it writes a file you import yourself (ASUR-LOCAL-01).
+
+def _cmd_habits(args: argparse.Namespace, store: PrivateStore, as_of: date) -> int:
+    """Habits on the journaled ``HabitTracker`` (LM07), and the .ics export (LM-G54).
+
+    Every action needs ``lifestyle`` consent (enforced by the tracker). History is
+    append-only: ``retire`` stops a habit without deleting it, and a check-in is never
+    overwritten. The export makes no network call and links no account: it writes a
+    file you import yourself (ASUR-LOCAL-01).
     """
     from .lifestyle.habit_ics import habits_to_calendar
     from .lifestyle.habits import HabitTracker
 
     tracker = HabitTracker(store)
+    if args.action == "add":
+        return _gate_outcome(tracker.add_habit(args.habit_id, args.name, started_on=args.start or as_of))
+    if args.action == "retire":
+        return _gate_outcome(tracker.retire_habit(args.habit_id))
+    if args.action == "checkin":
+        day = args.day or as_of
+        return _gate_outcome(tracker.check_in(args.habit_id, day, done=not args.missed, as_of=as_of))
+    if args.action == "list":
+        history = tracker.habit_history()
+        for h in history:
+            done = sum(1 for ok in h["checkins"].values() if ok)
+            print(
+                f"{h['habit_id']}\t{h['name']}\tsince {h['started_on'].isoformat()}\t"
+                f"{'active' if h['active'] else 'retired'}\t{done}/{len(h['checkins'])} check-ins done"
+            )
+        if not history:
+            print("no habits yet; add one with: life-mentor habits add ID --name NAME")
+        return 0
     text = habits_to_calendar(tracker.habit_history())
     if args.out:
         _write_new(Path(args.out), text, args.force)
@@ -516,7 +568,7 @@ def _run(args: argparse.Namespace) -> int:
     if args.cmd == "journal":
         return _cmd_journal(store)
     if args.cmd == "habits":
-        return _cmd_habits(args, store)
+        return _cmd_habits(args, store, as_of)
     return _cmd_import(args, store, as_of, generated)
 
 
@@ -524,9 +576,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         return _run(args)
+    except ConsentRequired as exc:
+        print(
+            f"error: no consent for {exc.category} data; grant it with: "
+            f'life-mentor consent grant {exc.category} --purpose "..."',
+            file=sys.stderr,
+        )
+        return 2
     except (
         CliError,
-        ConsentRequired,
         InsecureStore,
         JournalTampered,
         RulePackBlocked,

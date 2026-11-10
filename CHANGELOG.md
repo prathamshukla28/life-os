@@ -119,6 +119,30 @@ Weekly Tracker:
 - `core/gate.py`: the "no checks" result carried a bare string reason while every other
   reason is a dict, so a renderer reading `r["check"]` would crash.
 
+Command line (found in the release verification):
+
+- `weekly-tracker --generated-on` was printed into the report header unvalidated; it must
+  now be a real `YYYY-MM-DD` date.
+- `weekly-tracker plan done t9` printed "unknown task unknown task 't9'".
+- `weekly-tracker plan ics --out DIR` (and `write --out` onto a directory) asked for
+  `--force` and then failed naming the hidden temporary file. It now refuses with
+  "DIR is a directory", and any write failure names the path you gave.
+- `life-mentor` errors named Python calls (`ConsentLedger.grant(...)`, `correct()`).
+  They now give the command to run: `life-mentor consent grant <category> --purpose ...`,
+  `life-mentor fact correct <key> VALUE`, `life-mentor fact set <key> VALUE ...`. The bank
+  CSV HOLD reasons name `--allow-partial`.
+- A 29-digit salary made `tax` print `error: [<class 'decimal.InvalidOperation'>]`. Every
+  money input now has one bound, 10^15 either way (`MAX_AMOUNT`): `to_money` refuses
+  larger amounts, a calculator input beyond it BLOCKs with "out of range", a bank CSV
+  row beyond it is rejected, and a NAV beyond it leaves the scheme unpriced (HOLD).
+- `life-mentor fact set gross_salary_annual abc` was stored and failed only later. Money
+  facts are now checked when written (`fact set` and `fact correct`): a plain,
+  non-negative number within the bound.
+- `habits ics` always exported an empty calendar, because no command could add a habit.
+  New `habits add`, `habits list`, `habits checkin` and `habits retire`, on the existing
+  journaled habit tracker.
+- CI: the pinned `hypothesis` release needs Python 3.11; Python 3.10 now installs 6.168.5.
+
 ### Known limitations
 
 - Personal data is stored as plaintext JSON/JSONL, protected by `0700`/`0600`

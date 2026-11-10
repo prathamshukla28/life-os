@@ -15,6 +15,7 @@ from .facts import (
 from .store import (
     FACTS_FILE,
     PROFILE_JOURNAL,
+    FactExists,
     Profile,
     ProfileGateOutcome,
     Requirement,
@@ -34,6 +35,7 @@ __all__ = [
     "ConsentLedger",
     "ConsentRequired",
     "Fact",
+    "FactExists",
     "Profile",
     "ProfileGateOutcome",
     "Requirement",

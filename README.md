@@ -73,11 +73,35 @@ As of 2026-11-10. Generated on 2026-11-10. Overall status: SHIP (clear: every ch
 ```
 
 The full report also lists the inputs with their provenance, every rule used (source URL,
-retrieval date, UNVERIFIED flag), assumptions, and what would change the result. Other
+retrieval date, UNVERIFIED flag), assumptions, and what would change the result. Money
+facts such as `gross_salary_annual` must be a plain, non-negative number when you enter
+them (`1300000` or `85000.50`, not `13,00,000`), and every amount, whether a fact, a
+decision input or an imported row, is limited to 10^15. Other
 commands: `take-home`, `decide` / `confirm` (a decision analysis, and a record of *your*
 choice, which Life Mentor never carries out), `report finance|health|lifestyle|career|decisions|life-plan`,
-`fact set|correct|list|delete`, `profile export|missing`, `journal verify`, `habits ics`, and the local file importers
-`import bank-csv` (dry run unless `--apply`) and `import amfi-nav`. See
+`fact set|correct|list|delete`, `profile export|missing`, `journal verify`, `habits`, and the local file importers
+`import bank-csv` (dry run unless `--apply`; `--allow-partial` to skip unreadable or
+unmapped rows) and `import amfi-nav`.
+
+Habits need `lifestyle` consent. At most three are active at once, and history is never
+rewritten: `retire` stops a habit but keeps its check-ins, and a day is checked in once.
+
+```console
+$ life-mentor consent grant lifestyle --purpose habits
+lifestyle: granted
+$ life-mentor habits add walk --name "20-minute walk"
+habit walk added
+$ life-mentor habits checkin walk            # today; --day YYYY-MM-DD, --missed
+walk 2026-11-10
+$ life-mentor habits list
+walk	20-minute walk	since 2026-11-10	active	1/1 check-ins done
+$ life-mentor habits ics --out habits.ics    # a daily all-day event per active habit
+habits.ics
+$ life-mentor habits retire walk
+habit walk retired
+```
+
+See
 [`src/life_os/life_mentor/README.md`](src/life_os/life_mentor/README.md) and the
 [charter](src/life_os/life_mentor/docs/CHARTER.md).
 

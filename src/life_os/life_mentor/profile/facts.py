@@ -20,6 +20,12 @@ provenance and timestamp only - never the value or basis.
 
 Decimals serialise as ``{"$decimal": "85000.50"}`` so canonical JSON (which
 forbids Decimal) round-trips exactly.
+
+``MONEY_FACTS`` are the keys the calculators read as rupee amounts. ``Profile``
+checks them when they are written (``check_money_fact``): a number, not negative,
+and at most ``MAX_AMOUNT`` - the same bound ``finance.money.to_money`` applies to
+every money input, so an absurd figure is refused with a message instead of
+overflowing Decimal arithmetic later.
 """
 
 from __future__ import annotations
@@ -33,13 +39,17 @@ from ..security.redact import redact
 __all__ = [
     "ASSUMPTION",
     "CATEGORIES",
+    "MAX_AMOUNT",
+    "MONEY_FACTS",
     "PROVENANCES",
     "UNKNOWN",
     "USER_ESTIMATE",
     "VERIFIED",
     "Fact",
+    "check_money_fact",
     "decode_value",
     "encode_value",
+    "out_of_range",
 ]
 
 CATEGORIES = ("identity", "finance", "health", "career", "lifestyle", "goals")
@@ -51,6 +61,50 @@ UNKNOWN = "UNKNOWN"
 PROVENANCES = (VERIFIED, USER_ESTIMATE, ASSUMPTION, UNKNOWN)
 
 _DECIMAL_TAG = "$decimal"
+
+# Rs 10^15: far above any personal figure, and far enough below Decimal's 28-digit
+# precision that tax, interest and paise rounding never overflow.
+MAX_AMOUNT = Decimal(10) ** 15
+
+MONEY_FACTS = frozenset(
+    {
+        "gross_salary_annual",
+        "payroll_deductions_annual",
+        "other_deductions_annual",
+        "take_home_monthly",
+        "essential_spend_monthly",
+        "emergency_fund_balance",
+        "discretionary_spend_monthly",
+        "debt_budget_monthly",
+        "commute_monthly",
+        "other_monthly_costs",
+    }
+)
+
+
+def out_of_range(name: str) -> str:
+    """The one message for an amount beyond ``MAX_AMOUNT`` (facts and calculators)."""
+    return f"{name}: out of range; amounts are limited to 10^15 (1,000 trillion) either way"
+
+
+def check_money_fact(key: str, value: Any) -> None:
+    """Refuse a value a calculator could not use as the rupee amount *key* (ValueError).
+
+    Only keys in ``MONEY_FACTS`` are checked; ``None`` (an UNKNOWN fact) is allowed.
+    """
+    if key not in MONEY_FACTS or value is None:
+        return
+    if isinstance(value, bool) or not isinstance(value, (int, Decimal)):
+        raise ValueError(
+            f"{key} is an amount in rupees: give a plain number such as 1300000 or 85000.50 "
+            f"(got {type(value).__name__})"
+        )
+    if isinstance(value, Decimal) and not value.is_finite():
+        raise ValueError(f"{key}: not a finite number")
+    if value < 0:
+        raise ValueError(f"{key} cannot be negative")
+    if value > MAX_AMOUNT:
+        raise ValueError(out_of_range(key))
 
 
 def encode_value(value: Any) -> Any:

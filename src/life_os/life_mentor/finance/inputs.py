@@ -8,7 +8,8 @@ Every calculator argument may be:
   - ``None``               -> missing.
 
 ``float`` raises ``TypeError`` immediately (money is never float). A Fact or
-RuleValue holding a non-number is a contradiction and becomes a BLOCK check.
+RuleValue holding a non-number, and any amount that is non-finite or beyond
+``MAX_AMOUNT``, is a contradiction and becomes a BLOCK check.
 Gate semantics (fail closed): missing/UNKNOWN -> HOLD, invalid/negative ->
 BLOCK, ASSUMPTION/USER_ESTIMATE -> SHIP but listed in the report assumptions.
 """
@@ -88,10 +89,13 @@ def resolve(
             return InputValue(name, None, UNKNOWN, raw.basis, **common)
         try:
             value = to_money(name, raw.value)
-        except (TypeError, ValueError) as exc:
+        except TypeError as exc:
             return InputValue(
                 name, None, raw.provenance, raw.basis, error=f"profile fact is not a number ({exc})", **common
             )
+        except ValueError as exc:
+            msg = str(exc).removeprefix(f"{name}: ")
+            return InputValue(name, None, raw.provenance, raw.basis, error=f"profile fact: {msg}", **common)
         return _checked(InputValue(name, value, raw.provenance, raw.basis, **common))
     if isinstance(raw, RuleValue):
         try:
@@ -114,7 +118,10 @@ def resolve(
         # out of every calculator). Floats still raise TypeError: that is a bug in
         # the caller, not bad data.
         return InputValue(name, None, prov, basis, error="not a finite number", **common)
-    value = to_money(name, raw)  # raises TypeError on float
+    try:
+        value = to_money(name, raw)  # raises TypeError on float
+    except ValueError as exc:  # beyond MAX_AMOUNT: a BLOCKing input error, not an exception
+        return InputValue(name, None, prov, basis, error=str(exc).removeprefix(f"{name}: "), **common)
     return _checked(InputValue(name, value, prov, basis, **common))
 
 

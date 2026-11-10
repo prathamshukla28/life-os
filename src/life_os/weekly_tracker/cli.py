@@ -87,8 +87,25 @@ def _week(text: str | None, today: date) -> IsoWeek:
 
 
 def _write_out(target: Path, data: bytes, force: bool) -> None:
-    """Atomic 0600 write that never clobbers without *force* (see ``write_file_atomic``)."""
-    write_file_atomic(target, data, overwrite=force)
+    """Atomic 0600 write that never clobbers without *force* (see ``write_file_atomic``).
+
+    A failure is reported against *target*, never the hidden temporary file.
+    """
+    try:
+        write_file_atomic(target, data, overwrite=force)
+    except FileExistsError:
+        raise
+    except OSError as exc:
+        raise OSError(exc.errno, exc.strerror or str(exc), str(target)) from exc
+
+
+def _refusal(target: Path, force: bool) -> str | None:
+    """Why *target* (an ``--out`` path) cannot be written, or None."""
+    if target.is_dir():
+        return f"{target} is a directory; give a file path"
+    if target.exists() and not force:
+        return f"{target} exists; use --force to overwrite"
+    return None
 
 
 def _report(args: argparse.Namespace, planner: Planner, week: IsoWeek, today: date) -> str:
@@ -123,8 +140,9 @@ def _run(args: argparse.Namespace, today: date) -> int:
             text = planner_to_calendar(planner.tasks(_week(args.week, today)))
             if args.out:
                 target = Path(args.out).expanduser()
-                if target.exists() and not args.force:
-                    print(f"{target} exists; use --force to overwrite", file=sys.stderr)
+                refusal = _refusal(target, args.force)
+                if refusal:
+                    print(f"error: {refusal}", file=sys.stderr)
                     return 1
                 _write_out(target, text.encode("utf-8"), args.force)
                 print(target)
@@ -145,15 +163,16 @@ def _run(args: argparse.Namespace, today: date) -> int:
     name = f"{week}.md"
     if args.out:
         target = Path(args.out).expanduser() / name
-        if target.exists() and not args.force:
-            print(f"{target} exists; use --force to overwrite", file=sys.stderr)
+        refusal = _refusal(target, args.force)
+        if refusal:
+            print(f"error: {refusal}", file=sys.stderr)
             return 1
         _write_out(target, text.encode("utf-8"), args.force)
     else:
         store = PrivateStore(planner.home)
         target = store.path(f"weeks/{name}")
         if target.exists() and not args.force:
-            print(f"{target} exists; use --force to overwrite", file=sys.stderr)
+            print(f"error: {target} exists; use --force to overwrite", file=sys.stderr)
             return 1
         store.write_bytes(f"weeks/{name}", text.encode("utf-8"))
     print(target)
@@ -172,7 +191,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         return _run(args, today)
     except KeyError as exc:
-        print(f"error: unknown task {exc.args[0] if exc.args else ''}", file=sys.stderr)
+        # The planner's KeyError already reads "unknown task 't9'".
+        print(f"error: {exc.args[0] if exc.args else 'unknown task'}", file=sys.stderr)
         return 1
     except JournalTampered as exc:
         print(f"error: {exc}", file=sys.stderr)

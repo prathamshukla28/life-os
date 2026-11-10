@@ -2,7 +2,9 @@
 
 ``to_money`` accepts ``Decimal`` or ``int`` (not ``bool``) and raises
 ``TypeError`` for ``float`` or anything else - consistent with
-``life_os.life_mentor.profile.facts``. ``round_288`` implements the Indian
+``life_os.life_mentor.profile.facts`` - and ``ValueError`` for a non-finite amount
+or one beyond ``MAX_AMOUNT`` (Rs 10^15 either way, the bound profile money facts
+use too). ``round_288`` implements the Indian
 income-tax rounding convention; ``format_inr`` renders Indian digit grouping
 for explanation strings (commas also keep long amounts from looking like
 account numbers to the PII redactor).
@@ -13,13 +15,15 @@ from __future__ import annotations
 from decimal import ROUND_FLOOR, ROUND_HALF_UP, Decimal
 from typing import Any
 
-__all__ = ["PAISA", "format_inr", "quantize_paise", "round_288", "to_money"]
+from ..profile.facts import MAX_AMOUNT, out_of_range
+
+__all__ = ["MAX_AMOUNT", "PAISA", "format_inr", "quantize_paise", "round_288", "to_money"]
 
 PAISA = Decimal("0.01")
 
 
 def to_money(name: str, raw: Any) -> Decimal:
-    """Coerce *raw* to Decimal; float/bool/str are rejected with TypeError."""
+    """Coerce *raw* to Decimal; float/bool/str -> TypeError, non-finite/out of range -> ValueError."""
     if isinstance(raw, bool) or not isinstance(raw, (Decimal, int)):
         if isinstance(raw, float):
             raise TypeError(f"{name}: float is not allowed for money; use Decimal")
@@ -27,6 +31,8 @@ def to_money(name: str, raw: Any) -> Decimal:
     value = raw if isinstance(raw, Decimal) else Decimal(raw)
     if not value.is_finite():
         raise ValueError(f"{name}: non-finite amount")
+    if abs(value) > MAX_AMOUNT:
+        raise ValueError(out_of_range(name))
     return value
 
 

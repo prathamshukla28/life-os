@@ -32,7 +32,7 @@ from life_os.core.gate import BLOCK, HOLD, SHIP, Check
 from ..finance.inputs import InputValue, input_checks, resolve
 from ..finance.report import finalize, fixed_check
 from ..profile import ConsentLedger
-from ..profile.facts import encode_value
+from ..profile.facts import MAX_AMOUNT, encode_value
 from ..security import PrivateStore, redact
 from .bank_csv import IMPORT_JOURNAL
 
@@ -105,7 +105,7 @@ def parse_navall(path: str | os.PathLike[str]) -> dict[str, dict[str, Any]]:
         nav: Decimal | None
         # Strict: Decimal() alone would also accept "1_0.5" (as 10.5) and "1e2".
         parsed = Decimal(nav_text) if _NAV.fullmatch(nav_text) else Decimal("NaN")
-        nav = parsed if parsed.is_finite() and parsed > 0 else None
+        nav = parsed if parsed.is_finite() and 0 < parsed <= MAX_AMOUNT else None
         try:
             nav_date: date | None = datetime.strptime(date_text, "%d-%b-%Y").date()  # date-only
         except ValueError:
