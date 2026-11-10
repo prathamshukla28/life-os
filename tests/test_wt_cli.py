@@ -100,3 +100,14 @@ def test_show_with_repo_not_git(env: Path, tmp_path: Path, capsys: pytest.Captur
     plain.mkdir()
     code, out, _ = _run(capsys, "show", "--week", "2026-W41", "--repo", str(plain))
     assert code == 0 and "unavailable: not a git repository" in out
+
+
+@pytest.mark.parametrize("bad", ["2026-13-01", "garbage <b>", "1|2|3"])
+def test_generated_on_must_be_a_date(env: Path, capsys: pytest.CaptureFixture[str], bad: str) -> None:
+    # Regression: weekly-tracker printed --generated-on into the header unvalidated.
+    for cmd in ("show", "write"):
+        with pytest.raises(SystemExit) as exc:
+            main([cmd, "--week", "2026-W41", "--no-git", "--generated-on", bad])
+        assert exc.value.code == 2
+        assert "is not YYYY-MM-DD" in capsys.readouterr().err
+    assert not env.exists()

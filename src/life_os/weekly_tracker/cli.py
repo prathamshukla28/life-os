@@ -37,6 +37,13 @@ def _day(text: str) -> str:
         raise argparse.ArgumentTypeError(str(exc)) from exc
 
 
+def _iso_date(text: str) -> str:
+    try:
+        return date.fromisoformat(text).isoformat()
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"{text!r} is not YYYY-MM-DD") from exc
+
+
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="weekly-tracker", description="Weekly summary: planner, git work, Life Mentor."
@@ -51,7 +58,7 @@ def _parser() -> argparse.ArgumentParser:
         sp.add_argument("--repo", help="git repository (default: current directory)")
         sp.add_argument("--no-git", action="store_true", help="leave out git work")
         sp.add_argument("--tz", help="time zone for git dates, e.g. Asia/Kolkata")
-        sp.add_argument("--generated-on", help="date printed in the header (YYYY-MM-DD)")
+        sp.add_argument("--generated-on", type=_iso_date, help="date printed in the header (YYYY-MM-DD)")
         if name == "write":
             sp.add_argument("--out", help="output directory (default: <home>/weeks)")
             sp.add_argument("--force", action="store_true", help="overwrite an existing file")
