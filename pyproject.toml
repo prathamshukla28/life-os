@@ -33,7 +33,7 @@ dependencies = []
 # Developer / CI tooling only, pinned so lint, type and test runs are
 # reproducible. Never imported by the package.
 dev = [
-    "ruff==0.17.4",
+    "ruff==0.17.6",
     "mypy==2.4.1",
     "pytest==9.2.0",
     "pytest-cov==7.1.0",
