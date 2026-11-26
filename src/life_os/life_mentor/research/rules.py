@@ -17,6 +17,8 @@ Using (``rule_status`` / ``rules_gate``) is pure and takes an explicit
 ``as_of`` date (no hidden clock):
   - stale        as_of - retrieved_on > refresh_cadence_days      -> HOLD
   - not_in_effect as_of outside [effective_from, effective_to]     -> HOLD
+  (both by design: the HOLD reason names the rule, the date it expired or the range it
+  is in effect for, and how to proceed - re-check the source, or pass ``--as-of``)
   - future_retrieval retrieved_on after as_of (contradiction)      -> BLOCK
   - unverified   source_tier == secondary or not verified_by_human -> flagged
                  in the reasons (SHIP), or HOLD with require_verified=True
@@ -28,7 +30,7 @@ import json
 import os
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -347,16 +349,29 @@ def _rule_check(
         if st.future_retrieval:
             return BLOCK, f"{rid}: retrieved_on {rv.retrieved_on} is after as_of {day} {cite}"
         problems: list[str] = []
+        fixes: list[str] = []
         if st.stale:
+            expiry = rv.retrieved_on + timedelta(days=rv.refresh_cadence_days)
             problems.append(
-                f"stale: {st.age_days} days since retrieval > refresh cadence {rv.refresh_cadence_days}"
+                f"stale: expired after {expiry} ({st.age_days} days since retrieval > refresh "
+                f"cadence {rv.refresh_cadence_days})"
             )
+            fixes.append(f"re-check the source and update the rule pack, or pass --as-of {expiry} or earlier")
         if not st.in_effect:
             problems.append(f"not_in_effect: {on} outside {rv.effective_from} to {rv.effective_to or 'open'}")
+            span = (
+                f"{rv.effective_from} to {rv.effective_to}" if rv.effective_to else f"{rv.effective_from} on"
+            )
+            fixes.append(
+                f"pass --as-of a date from {span}"
+                if effective_on is None
+                else f"pass --tax-year (or --as-of) for a tax year starting from {span}"
+            )
         if st.unverified and require_verified:
             problems.append("unverified: secondary source or not human-verified")
         if problems:
-            return HOLD, f"{rid}: " + "; ".join(problems) + f" {cite}"
+            todo = f"; to proceed: {'; '.join(fixes)}" if fixes else ""
+            return HOLD, f"{rid}: " + "; ".join(problems) + todo + f" {cite}"
         note = " UNVERIFIED (secondary or not human-verified)" if st.unverified else ""
         return SHIP, f"{rid}: fresh and in effect{note} {cite}"
 

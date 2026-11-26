@@ -17,7 +17,7 @@ from life_os.life_mentor.cli import main as lm_main
 from life_os.life_mentor.finance.inputs import input_checks, resolve
 from life_os.life_mentor.finance.money import MAX_AMOUNT, to_money
 from life_os.life_mentor.integrations import parse_navall, preview_bank_csv
-from life_os.life_mentor.profile import FACTS_FILE, Fact, FactExists, Profile
+from life_os.life_mentor.profile import FACTS_FILE, PROFILE_JOURNAL, Fact, FactExists, Profile
 from life_os.life_mentor.security import PrivateStore
 from life_os.life_mentor.tracking import MetricLog
 from life_os.weekly_tracker.cli import main as wt_main
@@ -44,7 +44,7 @@ def _lm_with(tmp_path: Path, *categories: str) -> None:
 
 
 def test_wt_unknown_task_is_named_once(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    assert _wt(tmp_path, "plan", "done", "t9") == 1
+    assert _wt(tmp_path, "plan", "done", "t9") == 2
     assert capsys.readouterr().err.strip() == "error: unknown task 't9'"
 
 
@@ -122,7 +122,7 @@ def test_wt_ics_out_directory_names_the_users_path(
     outdir = tmp_path / "outdir"
     outdir.mkdir()
     args = ["plan", "ics", "--week", "2026-W46", "--out", str(outdir)] + (["--force"] if force else [])
-    assert _wt(tmp_path, *args) == 1
+    assert _wt(tmp_path, *args) == 2
     err = capsys.readouterr().err
     assert err.strip() == f"error: {outdir} is a directory; give a file path"
     assert not list(tmp_path.glob(".*.tmp"))
@@ -135,7 +135,7 @@ def test_wt_write_failure_names_the_target_not_the_temp_file(
     locked = tmp_path / "locked"
     locked.mkdir(mode=0o500)
     try:
-        assert _wt(tmp_path, "plan", "ics", "--week", "2026-W46", "--out", str(locked / "w.ics")) == 1
+        assert _wt(tmp_path, "plan", "ics", "--week", "2026-W46", "--out", str(locked / "w.ics")) == 2
         err = capsys.readouterr().err
         assert f"({locked / 'w.ics'})" in err and ".tmp" not in err
     finally:
@@ -164,10 +164,14 @@ def test_out_of_range_input_blocks_instead_of_raising() -> None:
 def test_lm_tax_on_a_stored_huge_salary_is_a_clear_block(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    # A store written before money facts were validated may still hold such a value.
+    # A store written before money facts were validated may still hold such a value
+    # (journaled the way that version journaled it: no facts digest).
     _lm_with(tmp_path, "finance")
     store = PrivateStore(tmp_path / "lm")
     fact = Fact("gross_salary_annual", D(HUGE), "finance", "VERIFIED", "x", NOW)
+    store.journal(PROFILE_JOURNAL).append(
+        {"event": "fact_set", "key": fact.key, "category": "finance", "provenance": "VERIFIED"}
+    )
     store.write_json(FACTS_FILE, {"facts": {fact.key: fact.to_dict()}})
     capsys.readouterr()
     assert _lm(tmp_path, "--as-of", "2026-11-10", "tax", "--regime", "new") == 2

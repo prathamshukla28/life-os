@@ -24,3 +24,6 @@ weekly-tracker plan ics --week 2026-W41 --out week.ics   # local .ics export (no
 Data lives in `~/.weekly_tracker/` (override with `WEEKLY_TRACKER_HOME` or `--home`);
 directories are 0700 and files 0600. Life Mentor data is read from `LIFE_MENTOR_HOME`
 (default `~/.life_mentor`) and never written. Calendar sync (Google/Outlook) is not built.
+
+Exit codes match `life-mentor`: `0` done, `2` refused, error or bad usage. `1` (HOLD) is
+never returned. A source that cannot be read shows as "unavailable" in the summary.

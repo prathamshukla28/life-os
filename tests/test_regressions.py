@@ -123,7 +123,7 @@ def test_cli_write_to_unwritable_dir_is_clean_error(
             str(blocker / "sub"),
         ]
     )
-    assert code == 1
+    assert code == 2
     assert "error:" in capsys.readouterr().err
 
 
@@ -143,7 +143,7 @@ def test_cli_write_never_clobbers_and_leaves_no_temp(tmp_path: Path) -> None:
     assert wt_main(args) == 0
     first = (out / "2026-W41.md").read_bytes()
     (out / "2026-W41.md").write_bytes(b"mine")
-    assert wt_main(args) == 1
+    assert wt_main(args) == 2
     assert (out / "2026-W41.md").read_bytes() == b"mine"
     assert wt_main([*args, "--force"]) == 0
     assert (out / "2026-W41.md").read_bytes() == first

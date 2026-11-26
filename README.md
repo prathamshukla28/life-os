@@ -43,8 +43,14 @@ weekly-tracker --help
 ### Life Mentor
 
 Only `init` creates the data directory. Every other command refuses to run without one.
-Exit codes: `0` SHIP or done, `1` HOLD (something is missing or waiting for you), `2`
-BLOCK or error.
+
+Exit codes (both tools use the same scheme, taken from the SHIP / HOLD / BLOCK gate):
+
+| Code | `life-mentor` | `weekly-tracker` |
+|---|---|---|
+| `0` | SHIP, or the command is done | done |
+| `1` | HOLD: something is missing or waiting for you | never returned (nothing to hold) |
+| `2` | BLOCK, a refusal, an error or bad usage | a refusal, an error or bad usage |
 
 ```console
 $ life-mentor init
@@ -79,7 +85,7 @@ them (`1300000` or `85000.50`, not `13,00,000`), and every amount, whether a fac
 decision input or an imported row, is limited to 10^15. Other
 commands: `take-home`, `decide` / `confirm` (a decision analysis, and a record of *your*
 choice, which Life Mentor never carries out), `report finance|health|lifestyle|career|decisions|life-plan`,
-`fact set|correct|list|delete`, `profile export|missing`, `journal verify`, `habits`, and the local file importers
+`fact set|correct|list|delete`, `profile export|missing`, `journal verify`, `habits`, `metrics`, and the local file importers
 `import bank-csv` (dry run unless `--apply`; `--allow-partial` to skip unreadable or
 unmapped rows) and `import amfi-nav`.
 
@@ -99,6 +105,48 @@ $ life-mentor habits ics --out habits.ics    # a daily all-day event per active 
 habits.ics
 $ life-mentor habits retire walk
 habit walk retired
+```
+
+Daily metrics (`weight_kg`, `sleep_hours`, `exercise_minutes`, `habit_completion_percent`,
+and the money metrics `income`, `expenses`, `savings`, `net_worth`, `debt`) need consent
+for their category: health, lifestyle or finance. Values are plain numbers. A metric has
+one value per day, and a day after `--as-of` (today by default) is refused. Sleep is
+capped at 24 hours, exercise at 1440 minutes and habit completion at 100 percent. Only
+`net_worth` may be negative. History is never rewritten: `correct` adds a new entry and
+the latest one counts.
+
+```console
+$ life-mentor consent grant health --purpose "weight and sleep"
+health: granted
+$ life-mentor metrics record weight_kg 72.4                # today; --day YYYY-MM-DD
+weight_kg 2026-11-10: 72.4 kg (USER_ESTIMATE)
+$ life-mentor metrics record sleep_hours 7.5 --day 2026-11-09 --provenance verified --basis "sleep tracker"
+sleep_hours 2026-11-09: 7.5 hours (VERIFIED)
+$ life-mentor metrics correct weight_kg 72.1                # a recorded day is corrected, never overwritten
+weight_kg 2026-11-10: 72.1 kg (USER_ESTIMATE)
+$ life-mentor metrics list                                  # or: metrics list weight_kg
+sleep_hours	2026-11-09	7.5	hours
+weight_kg	2026-11-10	72.1	kg
+not shown: no consent for finance, lifestyle
+$ life-mentor metrics review weight_kg --period weekly --target 72 --direction at_most
+```
+
+`metrics review` compares the latest week or month with the one before. It HOLDs (exit
+`1`) until the current window has at least three values.
+
+**Rule dates.** Every rule value has a retrieval date, a refresh cadence and a range of
+dates it is in effect for. When a value is older than its cadence (stale), or the date
+being computed falls outside its range (not in effect), `tax`, `take-home`, `decide` and
+the reports HOLD. This is deliberate: Life Mentor will not quietly use an out-of-date
+tax slab or interest rate. The HOLD reason names the rule, the date it expired or the range
+it covers, and what to do. Either re-check the cited source and update the rule pack,
+or compute as of an earlier date by putting `--as-of` before the command:
+
+```console
+$ life-mentor --as-of 2027-09-01 tax
+...
+- HOLD - rule:new_regime_slabs: new_regime_slabs: stale: expired after 2027-04-09 (325 days since retrieval > refresh cadence 180); not_in_effect: 2027-04-01 outside 2026-04-01 to 2027-03-31; to proceed: re-check the source and update the rule pack, or pass --as-of 2027-04-09 or earlier; pass --tax-year (or --as-of) for a tax year starting from 2026-04-01 to 2027-03-31 (source ...)
+$ life-mentor --as-of 2027-03-31 tax          # a date the bundled FY2026-27 rules cover
 ```
 
 See
@@ -140,7 +188,8 @@ to `--out DIR`. It never overwrites an existing file unless you pass `--force`.
 `weekly-tracker plan ics --week 2026-W46 [--out FILE]` exports the week's tasks as all-day
 events. Omit `--no-git` to include commits from `--repo PATH` (default: the current
 directory). Omit `--no-life-mentor` to include Life Mentor metrics, habits and decisions
-for the categories you have consented to.
+for the categories you have consented to. Exit codes: `0` done, `2` refused or error (see
+the table above).
 
 ## Architecture
 
@@ -155,7 +204,7 @@ any module imports a non-stdlib package or a network module (`socket`, `http`,
 
 | Package | Contents |
 |---|---|
-| `life_os.core` | Vendored from Asur: `gate` (fail-closed SHIP/HOLD/BLOCK), `canonical` (canonical JSON + SHA-256), `identity` (OS user and git config, no network), `evidence` (evidence classes), `clock` (UTC timestamps). |
+| `life_os.core` | Vendored from Asur: `gate` (fail-closed SHIP/HOLD/BLOCK), `canonical` (canonical JSON + SHA-256), `identity` (OS user and your global/system git config, never a repository's; no network), `evidence` (evidence classes), `clock` (UTC timestamps). |
 | `life_os.life_mentor` | `profile` (facts with provenance, per-category consent), `security` (private store, hash-chained journal, PII redaction, report scanner), `research` (dated, cited rule packs with staleness gates), `finance`, `decision_engine`, `health`, `lifestyle`, `career`, `tracking`, `reports`, `integrations` (bank CSV, AMFI NAV file), `ics`, `cli`. |
 | `life_os.weekly_tracker` | `week` (ISO 8601 weeks, including week 53 and year boundaries), `planner` (append-only event log), `sources` (git and Life Mentor readers), `render` (deterministic Markdown), `ics`, `cli`. |
 
@@ -171,8 +220,12 @@ Some design rules apply throughout:
 - **Git is read with care.** Before Weekly Tracker runs any `git` command, it reads the
   repository's own config files as text. It refuses the repository if they set anything
   that could make git run a program (`core.fsmonitor`, `core.pager`, diff/filter drivers,
-  `include`, `gpg.*`, ...). It then runs two fixed read-only commands with no shell and a
-  10-second timeout.
+  `include`, `gpg.program`, `gpg.ssh.defaultKeyCommand`, any `*Command`/`*Cmd`/`*Program`
+  key, ...). Declarative settings are fine, so a repository that signs its commits
+  (`gpg.format`, `user.signingKey`, `gpg.ssh.allowedSignersFile`, `commit.gpgSign`) is
+  read normally. It then runs two fixed read-only commands with no shell and a 10-second
+  timeout. Life Mentor's identity lookup (`git config user.email`) runs outside any
+  repository, so a repository's config is never read for it.
 
 ## Privacy and data storage
 
@@ -200,7 +253,11 @@ Some design rules apply throughout:
   append-only journals. Each entry is hash-chained to the previous one, and a head anchor
   makes truncation detectable. The audit journals hold keys and counts, never fact values.
   The metric log is different: it is the data store for tracked metrics, so it holds their
-  values. A tampered journal blocks further writes. This detects accidental damage and naive edits.
+  values. A tampered journal blocks further writes. `profile/facts.json` is checked
+  against the profile journal too: the journal records a salted digest of each version
+  Life Mentor writes, so a hand edit of facts.json (or a broken profile journal) stops the
+  facts being used on the next read or write. `life-mentor journal verify` reports it, and
+  `profile export` still exports but exits `2` with `journal_ok: false`. This detects accidental damage and naive edits.
   It is not a defence against someone who can rewrite the whole directory.
 - **Redaction.** Text bound for journals and reports passes through a redactor that masks
   e-mail addresses, Indian PAN and Aadhaar numbers, Indian phone numbers and long

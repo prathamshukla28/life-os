@@ -39,7 +39,15 @@ from .integrations import (
     preview_bank_csv,
     value_holdings,
 )
-from .profile import CATEGORIES, ConsentRequired, FactExists, Profile
+from .profile import (
+    CATEGORIES,
+    FACTS_FILE,
+    PROFILE_JOURNAL,
+    ConsentRequired,
+    FactExists,
+    FactsMismatch,
+    Profile,
+)
 from .profile.facts import decode_value, encode_value
 from .reports import (
     DISCLAIMERS,
@@ -64,6 +72,7 @@ from .security import (
     resolve_home,
     write_file_atomic,
 )
+from .tracking import METRICS, PERIODS, MetricLog, review
 
 __all__ = ["EXIT_CODES", "main"]
 
@@ -169,6 +178,32 @@ def _parser() -> argparse.ArgumentParser:
     hics = hab.add_parser("ics", help="export active habits to a .ics calendar (local)")
     hics.add_argument("--out", help="output .ics file (default: stdout)")
     hics.add_argument("--force", action="store_true", help="overwrite an existing file")
+
+    met = sub.add_parser(
+        "metrics",
+        help="daily metrics such as weight and sleep (needs consent for the metric's category)",
+        description="Metrics: "
+        + ", ".join(f"{name} ({cat}, {unit})" for name, (cat, unit, _) in sorted(METRICS.items()))
+        + ". History is append-only: a recorded day is changed with `correct`, never overwritten.",
+    ).add_subparsers(dest="action", required=True)
+    for name, text in (("record", "record one day's value"), ("correct", "change a recorded day's value")):
+        mp = met.add_parser(name, help=text)
+        mp.add_argument("metric", choices=sorted(METRICS))
+        mp.add_argument("value", help="a plain number, e.g. 72.4 (no commas or units)")
+        mp.add_argument("--day", type=_date, help="the day (default: --as-of, else today)")
+        mp.add_argument(
+            "--provenance", choices=tuple(k for k in PROVENANCE if k != "unknown"), default="estimate"
+        )
+        mp.add_argument("--basis", default="entered on the command line")
+    ml = met.add_parser("list", help="recorded values, oldest first (latest correction wins)")
+    ml.add_argument(
+        "metric", nargs="?", choices=sorted(METRICS), help="one metric (default: all you consented to)"
+    )
+    mv = met.add_parser("review", help="compare the latest week or month with the one before")
+    mv.add_argument("metric", choices=sorted(METRICS))
+    mv.add_argument("--period", choices=tuple(PERIODS), default="weekly")
+    mv.add_argument("--target", help="optional target for the window average")
+    mv.add_argument("--direction", choices=("at_least", "at_most"), help="how --target is met")
 
     imp = sub.add_parser("import").add_subparsers(dest="action", required=True)
     b = imp.add_parser("bank-csv", help="bank/expense CSV (dry run unless --apply)")
@@ -297,6 +332,9 @@ def _cmd_fact(args: argparse.Namespace, prof: Profile) -> int:
         removed = prof.delete(args.category)
         print(f"deleted {len(removed)} {args.category} fact(s)")
         return 0
+    problem = prof.facts_problem()  # JournalTampered if the journal itself is broken
+    if problem is not None:
+        raise FactsMismatch(problem)
     data = prof.export()
     for key, f in data["facts"].items():
         print(f"{key}\t{f['category']}\t{f['provenance']}\t{fmt_value(decode_value(f['value']))}")
@@ -305,12 +343,22 @@ def _cmd_fact(args: argparse.Namespace, prof: Profile) -> int:
 
 def _cmd_profile(args: argparse.Namespace, prof: Profile) -> int:
     if args.action == "export":
-        text = json.dumps(prof.export(), indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+        data = prof.export()
+        text = json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
         if args.out:
             _write_new(Path(args.out), text, args.force)
             print(args.out)
         else:
             sys.stdout.write(text)
+        if not data["journal_ok"]:
+            # Export is your right of access, so it still returns what is stored - but it
+            # cannot vouch for it.
+            print(
+                "error: exported, but a journal is broken or profile/facts.json does not match "
+                "it (journal_ok: false); run `life-mentor journal verify`",
+                file=sys.stderr,
+            )
+            return 2
         return 0
     questions = prof.missing_facts(requirements_for(args.kind), allow_assumptions=True)
     for q in questions:
@@ -430,7 +478,8 @@ def _cmd_report(args: argparse.Namespace, prof: Profile, as_of: date, generated:
     return _emit(rendered.markdown, rendered.disposition)
 
 
-def _cmd_journal(store: PrivateStore) -> int:
+def _cmd_journal(store: PrivateStore, prof: Profile) -> int:
+    """Verify every journal, then that facts.json agrees with the profile journal."""
     bad = False
     paths = sorted(store.root.rglob("*.jsonl"))
     for path in paths:
@@ -438,9 +487,76 @@ def _cmd_journal(store: PrivateStore) -> int:
         bad |= not ok
         rel = path.relative_to(store.root).as_posix()
         print(f"{rel}: {'ok' if ok else f'broken at entry {index}'}")
-    if not paths:
+    if store.path(FACTS_FILE).exists() or prof.journal.path.exists():
+        try:
+            problem = prof.facts_problem()
+            status = "ok" if problem is None else f"does not match {PROFILE_JOURNAL} ({problem})"
+        except JournalTampered:
+            problem = status = f"not checked: {PROFILE_JOURNAL} is broken"
+        except ValueError as exc:
+            problem = status = f"unreadable ({exc})"
+        bad |= problem is not None
+        print(f"{FACTS_FILE}: {status}")
+    elif not paths:
         print("no journals yet")
     return 2 if bad else 0
+
+
+def _metric_value(text: str) -> Decimal:
+    if not (_INT.fullmatch(text) or _DEC.fullmatch(text)):
+        raise CliError(f"{text!r} is not a plain number (e.g. 72.4; no commas, units or exponents)")
+    return Decimal(text)
+
+
+def _cmd_metrics(args: argparse.Namespace, store: PrivateStore, as_of: date, generated: str) -> int:
+    """Metrics on the journaled ``MetricLog`` (LM07): its bounds and consent gates apply.
+
+    ``record`` refuses a day that already has a value (use ``correct``); both keep the
+    full history. A day after --as-of (today by default) is refused as a typo.
+    """
+    log = MetricLog(store)
+    if args.action in ("record", "correct"):
+        value = _metric_value(args.value)
+        day = args.day or as_of
+        if day > as_of:
+            raise CliError(f"{day.isoformat()} is after {as_of.isoformat()}; a future day cannot be recorded")
+        prov = PROVENANCE[args.provenance]
+        write = log.record if args.action == "record" else log.correct
+        try:
+            write(args.metric, value, day, provenance=prov, basis=args.basis)
+        except ValueError as exc:
+            if "already has a value" not in str(exc):
+                raise
+            raise CliError(
+                f"{args.metric} already has a value for {day.isoformat()}; change it with: "
+                f"life-mentor metrics correct {args.metric} VALUE --day {day.isoformat()}"
+            ) from exc
+        print(f"{args.metric} {day.isoformat()}: {value} {METRICS[args.metric][1]} ({prov})")
+        return 0
+    if args.action == "list":
+        shown, hidden = 0, set()
+        for name in [args.metric] if args.metric else sorted(METRICS):
+            try:
+                series = log.series(name)
+            except ConsentRequired as exc:
+                if args.metric:
+                    raise
+                hidden.add(exc.category)
+                continue
+            for day, value in series:
+                print(f"{name}\t{day.isoformat()}\t{value}\t{METRICS[name][1]}")
+                shown += 1
+        if hidden:
+            print(f"not shown: no consent for {', '.join(sorted(hidden))}")
+        if not shown:
+            print("no metric values yet; add one with: life-mentor metrics record METRIC VALUE")
+        return 0
+    target = None if args.target is None else _metric_value(args.target)
+    report = review(
+        log, args.metric, as_of=as_of, period=args.period, target=target, target_direction=args.direction
+    )
+    disclaimer = DISCLAIMERS["finance" if METRICS[args.metric][0] == "finance" else "health"]
+    return _emit(*_single("Metric review", report, as_of, generated, disclaimer))
 
 
 def _cmd_import(args: argparse.Namespace, store: PrivateStore, as_of: date, generated: str) -> int:
@@ -566,9 +682,11 @@ def _run(args: argparse.Namespace) -> int:
     if args.cmd == "report":
         return _cmd_report(args, prof, as_of, generated)
     if args.cmd == "journal":
-        return _cmd_journal(store)
+        return _cmd_journal(store, prof)
     if args.cmd == "habits":
         return _cmd_habits(args, store, as_of)
+    if args.cmd == "metrics":
+        return _cmd_metrics(args, store, as_of, generated)
     return _cmd_import(args, store, as_of, generated)
 
 

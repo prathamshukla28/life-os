@@ -143,6 +143,45 @@ Command line (found in the release verification):
   journaled habit tracker.
 - CI: the pinned `hypothesis` release needs Python 3.11; Python 3.10 now installs 6.168.5.
 
+Found in the post-extraction code read:
+
+- The git guard refused every repository with any `gpg.*` key, so it refused every
+  repository that signs commits (life-os itself: `gpg.format=ssh`,
+  `gpg.ssh.allowedSignersFile`). It now refuses only keys whose value can run something:
+  `gpg.program`, `gpg.<format>.program`, `gpg.ssh.defaultKeyCommand`, any other key named
+  `*program`, `*command`, `*cmd`, `*hook` or `*helper` (outside `advice.*` and `alias.*`),
+  and the documented executors that do not follow that pattern (`core.fsmonitor`,
+  `core.editor`, `filter.*.clean`, `merge.*.driver`, `*.path` of difftool/mergetool/
+  browser/man tools, `interactive.diffFilter`, `imap.tunnel`, `instaweb.httpd`,
+  `sendemail.smtpServer`, ...). Newly refused: `gc.recentObjectsHook`, `guitool.*.cmd`,
+  `browser/man.*.cmd/path`, `tar.*.command`, `sendemail.*Cmd`. Declarative signing keys
+  (`gpg.format`, `user.signingKey`, `gpg.ssh.allowedSignersFile`, `commit.gpgSign`, ...)
+  are allowed.
+- A hand edit of `profile/facts.json` went unnoticed. Each fact event in the profile
+  journal now records a salted digest of the facts file it wrote, and facts.json must
+  match both the journal's replayed keys/categories/provenance and the last digest;
+  otherwise every read and write fails with "profile/facts.json does not match
+  profile/journal.jsonl", `fact list` refuses, `profile export` still exports but exits 2
+  with `journal_ok: false`, and `journal verify` reports it. Older journals (no digest)
+  stay loadable: only the replay check applies until the next write. Fact writes now hold
+  a lock across read, journal and write, so two concurrent writers cannot lose a change,
+  and the private store no longer fails with `FileExistsError` when two processes create
+  the same directory at once.
+- `core/identity.py` ran `git config --get` in the current directory, so a repository's
+  own `.git/config` (untrusted, never passed through the git guard) chose the recorded
+  identity. It now runs from an empty temporary directory with `GIT_CEILING_DIRECTORIES`
+  and without `GIT_DIR`/`GIT_WORK_TREE`, so only the user's global and system config are
+  read.
+- No command could record a metric although the metric log existed. New `life-mentor
+  metrics record|correct|list|review` on the existing `MetricLog` (same bounds and
+  consent gates; a future day is refused).
+- The two CLIs used different exit codes. `weekly-tracker` now matches `life-mentor`:
+  0 done, 2 refused, error or bad usage (it used to return 1 for refusals and errors).
+  1 stays life-mentor's HOLD; weekly-tracker never returns it.
+- A rule-pack HOLD (stale or not in effect) now says the date the rule expired, or the
+  range it is in effect for, and how to proceed (`--as-of`, `--tax-year`, or re-checking
+  the source). The behaviour itself is unchanged and by design.
+
 ### Known limitations
 
 - Personal data is stored as plaintext JSON/JSONL, protected by `0700`/`0600`
@@ -151,4 +190,5 @@ Command line (found in the release verification):
 - `decision_id` is an unkeyed content hash: it detects accidental edits of a saved
   report, not deliberate ones by someone with write access to the store.
 - A crash between a journal line and its head anchor leaves the journal failing
-  verification (fail closed); recovery is manual.
+  verification (fail closed); recovery is manual. The same holds for a crash between a
+  profile journal line and the facts.json write.

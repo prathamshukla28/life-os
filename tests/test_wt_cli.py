@@ -43,11 +43,11 @@ def test_plan_and_show(env: Path, capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_plan_errors(env: Path, capsys: pytest.CaptureFixture[str]) -> None:
     code, _, err = _run(capsys, "plan", "done", "t9")
-    assert code == 1 and "unknown task" in err
+    assert code == 2 and "unknown task" in err
     _run(capsys, "plan", "add", "--week", "2026-W41", "--day", "mon", "--text", "x")
     _run(capsys, "plan", "done", "t1")
     code, _, err = _run(capsys, "plan", "skip", "t1")
-    assert code == 1 and "already" in err
+    assert code == 2 and "already" in err
     with pytest.raises(SystemExit):
         main(["plan", "add", "--day", "funday", "--text", "x"])
     code, _, err = _run(capsys, "show", "--week", "2026-W99", "--no-git")
@@ -68,7 +68,7 @@ def test_write_default_dir_and_no_overwrite(env: Path, capsys: pytest.CaptureFix
     assert stat.S_IMODE((env / "weeks").stat().st_mode) == 0o700
     first = target.read_text(encoding="utf-8")
     code, _, err = _run(capsys, *args)
-    assert code == 1 and "--force" in err
+    assert code == 2 and "--force" in err
     assert target.read_text(encoding="utf-8") == first
     _run(capsys, "plan", "add", "--week", "2026-W41", "--day", "wed", "--text", "New")
     assert _run(capsys, *args, "--force")[0] == 0
@@ -92,7 +92,7 @@ def test_write_out_dir(env: Path, tmp_path: Path, capsys: pytest.CaptureFixture[
     assert code == 0 and target.is_file() and out.strip() == str(target)
     assert "2026-12-28 to 2027-01-03" in target.read_text(encoding="utf-8")
     assert stat.S_IMODE(target.stat().st_mode) == 0o600
-    assert _run(capsys, "write", "--week", "2026-W53", "--out", str(out_dir), "--no-git")[0] == 1
+    assert _run(capsys, "write", "--week", "2026-W53", "--out", str(out_dir), "--no-git")[0] == 2
 
 
 def test_show_with_repo_not_git(env: Path, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

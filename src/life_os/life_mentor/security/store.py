@@ -22,14 +22,22 @@ from __future__ import annotations
 import os
 import stat
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
+from types import ModuleType
 from typing import TYPE_CHECKING, Any
 
 from life_os.core.canonical import canonicalize, parse_json
 
 if TYPE_CHECKING:
     from .journal import Journal
+
+_fcntl: ModuleType | None
+try:  # POSIX advisory locks; absent on Windows.
+    import fcntl as _fcntl
+except ImportError:  # pragma: no cover - non-POSIX
+    _fcntl = None
 
 __all__ = [
     "DEFAULT_HOME_DIRNAME",
@@ -154,7 +162,10 @@ class PrivateStore:
                 )
             return self
         root.parent.mkdir(parents=True, exist_ok=True)
-        _mkdir_private(root)
+        try:
+            _mkdir_private(root)
+        except FileExistsError:  # created by a concurrent process: check it as an existing root
+            return self.ensure()
         return self
 
     def path(self, relpath: str) -> Path:
@@ -179,11 +190,15 @@ class PrivateStore:
         cur = self.root
         for part in rel.parts:
             cur = cur / part
+            if not cur.is_symlink() and not cur.exists():
+                try:
+                    _mkdir_private(cur)
+                    continue
+                except FileExistsError:
+                    pass  # created by a concurrent process: check it like an existing one
             if cur.is_symlink():
                 raise InsecureStore(f"{cur} is a symlink inside the store; refusing")
-            if not cur.exists():
-                _mkdir_private(cur)
-            elif not _is_private(cur.stat().st_mode):
+            if not _is_private(cur.stat().st_mode):
                 raise InsecureStore(f"{cur} is not private (expected 0700)")
 
     # -- file I/O -----------------------------------------------------------
@@ -223,6 +238,24 @@ class PrivateStore:
         if not target.exists():
             return default
         return parse_json(target.read_text(encoding="utf-8"))
+
+    @contextmanager
+    def lock(self, relpath: str) -> Iterator[None]:
+        """Hold an exclusive ``flock`` on the (0600, created if absent) file *relpath*.
+
+        For a read-modify-write of a file that ``write_json`` replaces atomically: the
+        lock file itself is never replaced, so every process locks the same inode. A
+        no-op where ``fcntl`` is missing (single-writer only there).
+        """
+        target = self.path(relpath)
+        self._ensure_parent(target)
+        fd = os.open(target, os.O_RDWR | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0), FILE_MODE)
+        try:
+            if _fcntl is not None:
+                _fcntl.flock(fd, _fcntl.LOCK_EX)
+            yield
+        finally:
+            os.close(fd)  # releases the lock
 
     def journal(self, relpath: str, *, clock: Callable[[], str] | None = None) -> Journal:
         """Return the hash-chained journal stored at *relpath*."""

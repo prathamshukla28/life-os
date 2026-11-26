@@ -4,7 +4,8 @@ Local, stdlib-only guidance with cited, dated rules and no combined score. Data 
 `~/.life_mentor/` (override with `--home` or `LIFE_MENTOR_HOME`); only `init` creates it.
 See `docs/CHARTER.md` for the rules Life Mentor follows.
 
-Exit codes: `0` = SHIP / done, `1` = HOLD (something missing or awaiting you), `2` = BLOCK or error.
+Exit codes: `0` = SHIP / done, `1` = HOLD (something missing or awaiting you), `2` = BLOCK,
+refusal or error (`weekly-tracker` uses the same codes and never returns `1`).
 
 ```sh
 life-mentor init
@@ -31,7 +32,23 @@ life-mentor habits checkin walk --day 2026-11-10      # once per day; --missed r
 life-mentor habits list
 life-mentor habits retire walk                        # stops it; the history is kept
 life-mentor habits ics --out habits.ics               # active habits as daily all-day events
+life-mentor consent grant health --purpose "weight and sleep"
+life-mentor metrics record weight_kg 72.4             # today; --day, --provenance, --basis
+life-mentor metrics correct weight_kg 72.1            # a recorded day is corrected, never overwritten
+life-mentor metrics list                              # every metric you consented to; or one metric
+life-mentor metrics review sleep_hours --period weekly --target 7 --direction at_least
 ```
+
+Metrics: `weight_kg`, `sleep_hours` (health), `exercise_minutes`, `habit_completion_percent`
+(lifestyle), `income`, `expenses`, `savings`, `net_worth`, `debt` (finance). Each needs
+consent for its category. Sleep is limited to 24 hours a day, exercise to 1440 minutes and
+habit completion to 100 percent. Only `net_worth` may be negative, and a future day is refused.
+
+Rule packs are dated. A rule value past its refresh cadence (stale), or not in effect on
+the date being computed, makes `tax`, `take-home`, `decide` and the reports HOLD, by design.
+The reason names the rule and says how to proceed: re-check the source and update the pack,
+or put `--as-of YYYY-MM-DD` (a date the rule covers) before the command, e.g.
+`life-mentor --as-of 2027-03-31 tax`.
 
 Money facts (`gross_salary_annual`, `payroll_deductions_annual`, `other_deductions_annual`,
 `take_home_monthly`, `essential_spend_monthly`, `emergency_fund_balance`,

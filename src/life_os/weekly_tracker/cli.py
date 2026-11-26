@@ -9,7 +9,10 @@
 Global: ``--home`` (planner + default output; else $WEEKLY_TRACKER_HOME or
 ~/.weekly_tracker), ``--life-mentor-home`` (else $LIFE_MENTOR_HOME or ~/.life_mentor),
 ``--no-life-mentor``. ``show`` only reads; ``write`` refuses to overwrite without --force.
-Exit codes: 0 ok, 1 refused/error, 2 usage.
+
+Exit codes follow ``life-mentor`` (and the SHIP / HOLD / BLOCK gate): 0 = done, 2 = refused,
+error or bad usage. 1 (HOLD) is never returned: Weekly Tracker has nothing to hold - a source
+it cannot read is reported as "unavailable" in the summary and the command still succeeds.
 """
 
 from __future__ import annotations
@@ -27,7 +30,10 @@ from .planner import Planner, resolve_home
 from .render import collect, render
 from .week import DAY_NAMES, IsoWeek, day_index
 
-__all__ = ["main"]
+__all__ = ["EXIT_ERROR", "EXIT_OK", "main"]
+
+EXIT_OK = 0
+EXIT_ERROR = 2  # life-mentor's BLOCK / error code; argparse also exits 2 on bad usage
 
 
 def _day(text: str) -> str:
@@ -46,7 +52,8 @@ def _iso_date(text: str) -> str:
 
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="weekly-tracker", description="Weekly summary: planner, git work, Life Mentor."
+        prog="weekly-tracker",
+        description="Weekly summary: planner, git work, Life Mentor. Exit 0 done, 2 refused/error.",
     )
     p.add_argument("--home", help="Weekly Tracker data directory")
     p.add_argument("--life-mentor-home", help="Life Mentor data directory (read-only)")
@@ -143,7 +150,7 @@ def _run(args: argparse.Namespace, today: date) -> int:
                 refusal = _refusal(target, args.force)
                 if refusal:
                     print(f"error: {refusal}", file=sys.stderr)
-                    return 1
+                    return EXIT_ERROR
                 _write_out(target, text.encode("utf-8"), args.force)
                 print(target)
             else:
@@ -154,29 +161,29 @@ def _run(args: argparse.Namespace, today: date) -> int:
         else:
             for t in planner.tasks(_week(args.week, today)):
                 print(f"{t.task_id}\t{t.day}\t{t.status}\t{t.text}")
-        return 0
+        return EXIT_OK
     week = _week(args.week, today)
     text = _report(args, planner, week, today)
     if args.command == "show":
         sys.stdout.write(text)
-        return 0
+        return EXIT_OK
     name = f"{week}.md"
     if args.out:
         target = Path(args.out).expanduser() / name
         refusal = _refusal(target, args.force)
         if refusal:
             print(f"error: {refusal}", file=sys.stderr)
-            return 1
+            return EXIT_ERROR
         _write_out(target, text.encode("utf-8"), args.force)
     else:
         store = PrivateStore(planner.home)
         target = store.path(f"weeks/{name}")
         if target.exists() and not args.force:
             print(f"error: {target} exists; use --force to overwrite", file=sys.stderr)
-            return 1
+            return EXIT_ERROR
         store.write_bytes(f"weeks/{name}", text.encode("utf-8"))
     print(target)
-    return 0
+    return EXIT_OK
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -187,29 +194,29 @@ def main(argv: Sequence[str] | None = None) -> int:
             IsoWeek.parse(args.week)
         except ValueError as exc:
             print(f"error: invalid --week: {exc}", file=sys.stderr)
-            return 2
+            return EXIT_ERROR
     try:
         return _run(args, today)
     except KeyError as exc:
         # The planner's KeyError already reads "unknown task 't9'".
         print(f"error: {exc.args[0] if exc.args else 'unknown task'}", file=sys.stderr)
-        return 1
+        return EXIT_ERROR
     except JournalTampered as exc:
         print(f"error: {exc}", file=sys.stderr)
-        return 1
+        return EXIT_ERROR
     except InsecureStore as exc:
         print(f"error: {exc}", file=sys.stderr)
-        return 1
+        return EXIT_ERROR
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
-        return 1
+        return EXIT_ERROR
     except FileExistsError as exc:
         print(f"error: {exc.filename2 or exc.filename} exists; use --force to overwrite", file=sys.stderr)
-        return 1
+        return EXIT_ERROR
     except OSError as exc:
         # Unwritable --out directory, full disk, ...: a clean message, not a traceback.
         print(f"error: {exc.strerror or exc} ({exc.filename or 'file system'})", file=sys.stderr)
-        return 1
+        return EXIT_ERROR
 
 
 if __name__ == "__main__":  # pragma: no cover
