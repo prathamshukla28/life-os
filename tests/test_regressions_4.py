@@ -159,8 +159,12 @@ def test_git_guard_against_gits_own_list_of_config_keys() -> None:
     keys = _documented_keys()
     # Every documented key whose name says "program/command/hook/helper" is refused ...
     runs = [k for k in keys if k.lower().endswith(("program", "command", "cmd", "hook", "helper"))]
-    runs = [k for k in runs if not k.lower().startswith("advice.")]
-    assert runs and all(dangerous_keys([_entry(k)]) for k in runs), runs
+    # advice.* names are boolean flags. alias.* (incl. alias.<name>.command, git >= 2.56) only
+    # runs when the alias is invoked by name, git ignores aliases that hide built-in commands,
+    # and Weekly Tracker runs built-ins only (rev-parse, log) - see _NAME_ONLY_SECTIONS.
+    runs = [k for k in runs if not k.lower().startswith(("advice.", "alias."))]
+    assert runs
+    assert [k for k in runs if not dangerous_keys([_entry(k)])] == []
     # ... and the documented declarative signing keys are not.
     signing = [
         "gpg.format",
