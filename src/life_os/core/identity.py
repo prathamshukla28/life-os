@@ -4,7 +4,8 @@
 
 Identity in ASUR is derived ONLY from the local machine:
   - the OS user (getpass.getuser / `whoami`)
-  - git config user.name and user.email (local or global)
+  - git config user.name and user.email from the USER's git config (global and
+    system) - never a repository's own .git/config, see ``_git_config``
 
 There is NO remote auth, NO GitHub login, NO network call, and NO
 cryptographic key. This replaces Trinity's SSH-signature authorship proof
@@ -25,6 +26,7 @@ import getpass
 import os
 import shutil
 import subprocess
+import tempfile
 from dataclasses import asdict, dataclass
 
 __all__ = ["Identity", "get_identity"]
@@ -60,25 +62,57 @@ def _os_user() -> str:
     return user or os.environ.get("USER") or os.environ.get("LOGNAME") or "unknown"
 
 
-def _git_config(key: str) -> str:
-    """Read one git config value locally. Returns "" if git/value absent.
+# Environment variables that point git at a repository (and so at its untrusted
+# .git/config). The user's own GIT_CONFIG_GLOBAL / GIT_CONFIG_NOSYSTEM are kept.
+_REPO_ENV = frozenset(
+    {
+        "GIT_DIR",
+        "GIT_WORK_TREE",
+        "GIT_COMMON_DIR",
+        "GIT_INDEX_FILE",
+        "GIT_OBJECT_DIRECTORY",
+        "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+        "GIT_NAMESPACE",
+        "GIT_CEILING_DIRECTORIES",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+    }
+)
 
-    Uses `git config --get`, which reads local then global config files on
-    disk. No network. If git is not installed or the key is unset, we return
-    an empty string rather than raising - identity recording must not block
-    work; it is the *gate* that enforces policy.
+
+def _git_config(key: str) -> str:
+    """Read one value from the user's git config. Returns "" if git/value absent.
+
+    Runs ``git config --get`` with no shell, from a fresh EMPTY temporary directory, with
+    ``GIT_CEILING_DIRECTORIES`` set to that directory's parent and the repository-selecting
+    variables (``GIT_DIR``, ``GIT_WORK_TREE``, ...) removed. So git finds no repository and
+    reads only the system and global config - files the user owns - and never the
+    ``.git/config`` of whatever repository the process happens to be started in. That file
+    is not trusted (Weekly Tracker refuses repositories whose config could run commands, see
+    ``weekly_tracker.sources.git_guard``); it also should not decide who "you" are. Routing
+    this call through the guard instead would make identity depend on the current
+    directory, and would still read a repository-local ``user.email`` set by someone else.
+
+    No network. If git is not installed or the key is unset, we return an empty string
+    rather than raising - identity recording must not block work; it is the *gate* that
+    enforces policy.
     """
     git = shutil.which("git")
     if not git:
         return ""
+    env = {k: v for k, v in os.environ.items() if k not in _REPO_ENV}
     try:
-        out = subprocess.run(
-            [git, "config", "--get", key],
-            capture_output=True,
-            text=True,
-            timeout=5,
-            check=False,
-        )
+        with tempfile.TemporaryDirectory(prefix="life-os-identity-") as tmp:
+            empty = os.path.realpath(tmp)
+            env["GIT_CEILING_DIRECTORIES"] = os.path.dirname(empty)
+            out = subprocess.run(
+                [git, "config", "--get", key],
+                cwd=empty,
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
     except (OSError, subprocess.SubprocessError):
         return ""
     if out.returncode != 0:

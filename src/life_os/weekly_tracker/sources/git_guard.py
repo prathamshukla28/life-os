@@ -10,8 +10,10 @@ the git directory without running git and read its config files as text:
   * read ``config`` and ``config.worktree`` of both with a minimal parser (sections,
     ``[section "sub"]``, old ``[section.sub]``, ``key = value``, comments, quoted values,
     backslash continuations); keys are case-insensitive;
-  * refuse if any key that can name a program, hook, pager, filter or included file is
-    present (``DANGEROUS``); anything unreadable or unparseable is refused (fail closed).
+  * refuse if any key whose value can name a program, command, hook, pager, filter or
+    included file is present (``is_dangerous``); declarative keys - commit signing set up
+    with ``gpg.format`` / ``user.signingKey`` / ``gpg.ssh.allowedSignersFile`` included -
+    are allowed. Anything unreadable or unparseable is refused (fail closed).
 
 The user's own global/system config is trusted (it is theirs, not the repository's).
 """
@@ -27,6 +29,7 @@ __all__ = [
     "GitLocation",
     "dangerous_keys",
     "find_git_dir",
+    "is_dangerous",
     "parse_git_config",
     "repo_config_problem",
 ]
@@ -34,34 +37,46 @@ __all__ = [
 REFUSAL = "repository has a custom git config that could run commands"
 _SECTION = re.compile(r'\[\s*([A-Za-z0-9.-]+)(?:\s+"((?:[^"\\\n]|\\.)*)")?\s*\]')
 _KEY = re.compile(r"([A-Za-z][A-Za-z0-9-]*)\s*(?:=(.*))?$")
-_WHOLE_SECTIONS = frozenset({"include", "includeif", "pager", "safe", "gpg"})
-_CORE = frozenset(
-    {"fsmonitor", "pager", "hookspath", "editor", "sshcommand", "alternaterefscommand", "gitproxy", "askpass"}
-)
-_DRIVERS = frozenset({"diff", "merge", "filter", "difftool", "mergetool", "trailer", "remote", "submodule"})
-_DRIVER_KEYS = frozenset(
-    {
-        "command",
-        "cmd",
-        "driver",
-        "clean",
-        "smudge",
-        "process",
-        "textconv",
-        "uploadpack",
-        "receivepack",
-        "vcs",
-        "update",
-    }
-)
-_EXACT = frozenset(
-    {
-        ("diff", "external"),
-        ("uploadpack", "packobjectshook"),
-        ("sequence", "editor"),
-        ("credential", "helper"),
-    }
-)
+
+# What counts as "could run a program" follows `git help --config` (git 2.50). Only keys
+# whose VALUE names a program, shell command, hook or extra config file are refused;
+# purely declarative keys are allowed - in particular commit signing (gpg.format,
+# user.signingKey, gpg.ssh.allowedSignersFile, gpg.ssh.revocationFile, gpg.minTrustLevel,
+# commit/tag/push.gpgSign), so a repository that signs its commits is not refused.
+
+# Every key in these sections is refused: include/includeIf pull in files this guard has
+# not read, pager.<cmd> is a command, and safe.* is a trust setting git only honours from
+# the user's own config - a repository that sets it is trying to widen its own trust.
+_WHOLE_SECTIONS = frozenset({"include", "includeif", "pager", "safe"})
+# Key-name endings git uses for "this value is run": gpg.program, gpg.<format>.program,
+# gpg.ssh.defaultKeyCommand, core.sshCommand, core.alternateRefsCommand,
+# diff.<driver>.command, trailer.<key>.command/.cmd, tar.<format>.command,
+# difftool/mergetool/browser/man/guitool.<tool>.cmd, sendemail.toCmd/ccCmd/headerCmd/
+# sendmailCmd, credential[.<url>].helper, uploadpack.packObjectsHook,
+# gc.recentObjectsHook. Matching the ending also covers keys added by later git versions.
+_COMMAND_SUFFIXES = ("program", "command", "cmd", "hook", "helper")
+# Sections whose key NAMES are free-form or boolean flags, so a name ending in "cmd" or
+# "hook" says nothing about its value (advice.ignoredHook, alias.lgcmd). An alias only
+# runs when invoked by name, and Weekly Tracker runs fixed built-in commands only.
+_NAME_ONLY_SECTIONS = frozenset({"advice", "alias"})
+# section -> keys that run a program, with or without a <name> subsection.
+_SECTION_KEYS: dict[str, frozenset[str]] = {
+    "core": frozenset({"fsmonitor", "pager", "hookspath", "editor", "gitproxy", "askpass"}),
+    "diff": frozenset({"external", "textconv"}),
+    "merge": frozenset({"driver"}),
+    "filter": frozenset({"clean", "smudge", "process"}),
+    "difftool": frozenset({"path"}),
+    "mergetool": frozenset({"path"}),
+    "browser": frozenset({"path"}),
+    "man": frozenset({"path"}),
+    "remote": frozenset({"uploadpack", "receivepack", "vcs"}),
+    "submodule": frozenset({"update"}),  # "!command" runs it
+    "sequence": frozenset({"editor"}),
+    "interactive": frozenset({"difffilter"}),
+    "imap": frozenset({"tunnel"}),
+    "instaweb": frozenset({"httpd"}),
+    "sendemail": frozenset({"smtpserver"}),  # an absolute path is run as sendmail
+}
 
 
 class GitConfigError(ValueError):
@@ -174,20 +189,24 @@ def _scan_value(value: str, quoted: bool) -> tuple[bool, bool]:
     return False, quoted
 
 
+def is_dangerous(section: str, sub: str | None, key: str) -> bool:
+    """True if (lower-cased) *section*.[*sub*.]*key* can make git run a program."""
+    del sub  # the subsection only names a driver, tool, remote or URL
+    return (
+        section in _WHOLE_SECTIONS
+        or key == "textconv"  # in any section: diff.<driver>.textconv is the git one
+        or key in _SECTION_KEYS.get(section, frozenset())
+        or (section not in _NAME_ONLY_SECTIONS and key.endswith(_COMMAND_SUFFIXES))
+    )
+
+
 def dangerous_keys(entries: list[tuple[str, str | None, str]]) -> list[str]:
-    bad: list[str] = []
-    for section, sub, key in entries:
-        name = f"{section}.{sub + '.' if sub else ''}{key}"
-        if (
-            section in _WHOLE_SECTIONS
-            or (section == "core" and key in _CORE)
-            or key == "textconv"
-            or (section in _DRIVERS and sub is not None and key in _DRIVER_KEYS)
-            or (section, key) in _EXACT
-            or (section == "credential" and key == "helper")
-        ):
-            bad.append(name)
-    return bad
+    """Dotted names of the *entries* that can make git run a program (see ``is_dangerous``)."""
+    return [
+        f"{section}.{sub + '.' if sub else ''}{key}"
+        for section, sub, key in entries
+        if is_dangerous(section, sub, key)
+    ]
 
 
 def repo_config_problem(path: Path) -> tuple[GitLocation | None, str | None]:

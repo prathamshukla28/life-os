@@ -149,8 +149,33 @@ def test_quantize_paise_is_half_up_and_idempotent(amount: Decimal) -> None:
 
 # --- git config guard: differential against git itself --------------------------------------------
 
-_keys = st.sampled_from(["name", "fsmonitor", "pager", "editor", "x", "hookspath", "helper"])
-_sections = st.sampled_from(["[core]", "[user]", '[diff "a"]', "[alias]", "[credential]", "[Core]"])
+_keys = st.sampled_from(
+    [
+        "name",
+        "fsmonitor",
+        "pager",
+        "editor",
+        "x",
+        "hookspath",
+        "helper",
+        "format",
+        "program",
+        "defaultKeyCommand",
+    ]
+)
+_sections = st.sampled_from(
+    [
+        "[core]",
+        "[user]",
+        '[diff "a"]',
+        "[alias]",
+        "[credential]",
+        "[Core]",
+        "[gpg]",
+        '[gpg "ssh"]',
+        "[gpg.ssh]",
+    ]
+)
 _values = st.lists(st.sampled_from(["a", " ", ";", "#", '"', "\\", "b c", "\\\\", '\\"']), max_size=6).map(
     "".join
 )
